@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const CATEGORIES = [
   {
@@ -91,11 +92,13 @@ export default function HomePage() {
 <header className="glass-effect sticky top-0 z-50 md:block hidden">
           <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] flex items-center justify-center">
-                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-                </svg>
-              </div>
+              <Image 
+                src="/assets/logos/logo1.png" 
+                alt="AlgoViz OS Logo" 
+                width={40} 
+                height={40} 
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg"
+              />
               <div>
                 <h1 className="font-bold text-sm sm:text-base text-[var(--text-primary)]">AlgoViz OS</h1>
                 <p className="text-[10px] sm:text-xs text-[var(--text-muted)]">OS Algorithm Visualizer</p>
@@ -136,11 +139,13 @@ export default function HomePage() {
         </button>
         
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] flex items-center justify-center">
-            <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-            </svg>
-          </div>
+          <Image 
+            src="/assets/logos/logo1.png" 
+            alt="AlgoViz OS Logo" 
+            width={48} 
+            height={48} 
+            className="w-12 h-12 rounded-lg"
+          />
           <div>
             <h1 className="font-bold text-lg text-[var(--text-primary)]">AlgoViz OS</h1>
             <p className="text-xs text-[var(--text-muted)]">OS Algorithm Visualizer</p>
