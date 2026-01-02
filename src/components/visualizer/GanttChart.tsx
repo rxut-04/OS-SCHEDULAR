@@ -18,6 +18,7 @@ interface GanttChartProps {
   speed: number;
   onStepChange: (stepIndex: number) => void;
   currentStep: number;
+  algorithm?: string;
 }
 
 export function GanttChart({ 
@@ -27,7 +28,8 @@ export function GanttChart({
   isPlaying, 
   speed, 
   onStepChange,
-  currentStep 
+  currentStep,
+  algorithm = 'CPU Scheduling'
 }: GanttChartProps) {
   const [view, setView] = useState<'2d' | '3d'>('3d');
 
@@ -100,7 +102,7 @@ return (
             
             {view === '3d' && (
               <Link
-                href={`/cpu-scheduling/3d-view?data=${encodeURIComponent(JSON.stringify({ ganttChart, processes }))}`}
+                href={`/cpu-scheduling/3d-view?data=${encodeURIComponent(JSON.stringify({ ganttChart, processes, algorithm }))}`}
                 className="p-1.5 sm:p-2 rounded-lg bg-[var(--bg-tertiary)] text-[var(--text-muted)] hover:text-[var(--accent-primary)] hover:bg-[var(--accent-primary)]/10 transition-all"
                 title="Open fullscreen 3D view"
               >

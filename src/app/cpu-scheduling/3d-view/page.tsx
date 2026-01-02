@@ -3,24 +3,29 @@
 import { useEffect, useState, Suspense, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { GanttBlock, Process } from '@/lib/algorithms/types';
 
-const GanttChart3DFullscreen = dynamic(
-  () => import('@/components/visualizer/GanttChart3DFullscreen').then(mod => ({ default: mod.GanttChart3DFullscreen })),
+const GanttChart3DWithCharacter = dynamic(
+  () => import('@/components/visualizer/GanttChart3DWithCharacter').then(mod => ({ default: mod.GanttChart3DWithCharacter })),
   { ssr: false, loading: () => <div className="w-full h-full bg-[#0a0a15] flex items-center justify-center text-gray-500">Loading 3D...</div> }
 );
 
 function ThreeDViewContent() {
   const searchParams = useSearchParams();
-  const [animatedTime, setAnimatedTime] = useState(-1);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isExplaining, setIsExplaining] = useState(false);
+  const [showAllBlocks, setShowAllBlocks] = useState(true);
 
   const data = useMemo(() => {
     const dataParam = searchParams.get('data');
     if (dataParam) {
       try {
-        return JSON.parse(decodeURIComponent(dataParam)) as { ganttChart: GanttBlock[]; processes: Process[] };
+        return JSON.parse(decodeURIComponent(dataParam)) as { 
+          ganttChart: GanttBlock[]; 
+          processes: Process[];
+          algorithm?: string;
+        };
       } catch (e) {
         console.error('Failed to parse data', e);
         return null;
@@ -29,36 +34,16 @@ function ThreeDViewContent() {
     return null;
   }, [searchParams]);
 
-  useEffect(() => {
-    if (!isPlaying || !data) return;
-    
-    const totalTime = data.ganttChart.length > 0 ? data.ganttChart[data.ganttChart.length - 1].endTime : 0;
-    
-    const interval = setInterval(() => {
-      setAnimatedTime(prev => {
-        if (prev >= totalTime) {
-          setIsPlaying(false);
-          return totalTime;
-        }
-        return prev + 1;
-      });
-    }, 800);
+  const algorithm = data?.algorithm || searchParams.get('algorithm') || 'CPU Scheduling';
 
-    return () => clearInterval(interval);
-  }, [isPlaying, data]);
-
-  const totalTime = data?.ganttChart.length ? data.ganttChart[data.ganttChart.length - 1].endTime : 0;
-
-  const handlePlay = () => {
-    if (animatedTime >= totalTime) {
-      setAnimatedTime(-1);
-    }
-    setIsPlaying(true);
+  const handleStartExplanation = () => {
+    setShowAllBlocks(false);
+    setIsExplaining(true);
   };
 
-  const handleReset = () => {
-    setAnimatedTime(-1);
-    setIsPlaying(false);
+  const handleStopExplanation = () => {
+    setIsExplaining(false);
+    setShowAllBlocks(true);
   };
 
   if (!data) {
@@ -77,62 +62,75 @@ function ThreeDViewContent() {
   return (
     <div className="h-screen w-screen bg-[#0a0a15] flex flex-col overflow-hidden">
       <header className="absolute top-0 left-0 right-0 z-50 p-2 sm:p-4 flex items-center justify-between gap-2">
-        <Link 
-          href="/cpu-scheduling"
-          className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-all text-sm sm:text-base"
-        >
-          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          <span className="hidden sm:inline">Back</span>
-        </Link>
+        <div className="flex items-center gap-2 sm:gap-4">
+          <Link 
+            href="/cpu-scheduling"
+            className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-all text-sm sm:text-base"
+          >
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span className="hidden sm:inline">Back</span>
+          </Link>
+          
+          <div className="hidden sm:flex items-center gap-2">
+            <Image
+              src="/assets/logos/logo1.png"
+              alt="Logo"
+              width={32}
+              height={32}
+              className="rounded-lg"
+            />
+            <span className="text-white font-semibold">{algorithm}</span>
+          </div>
+        </div>
         
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
           <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-white/10 backdrop-blur-sm">
-            <button
-              onClick={handleReset}
-              className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 text-white transition-all"
-              title="Reset"
-            >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            </button>
-            
-            <button
-              onClick={() => isPlaying ? setIsPlaying(false) : handlePlay()}
-              className="px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-cyan-500 text-white font-medium hover:bg-cyan-400 transition-all flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base"
-            >
-              {isPlaying ? (
-                <>
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span className="hidden sm:inline">Pause</span>
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span className="hidden sm:inline">Play</span>
-                </>
-              )}
-            </button>
-          </div>
-          
-          <div className="px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-white/10 backdrop-blur-sm text-white font-mono text-xs sm:text-base">
-            <span className="hidden sm:inline">Time: </span>{Math.max(0, animatedTime)} / {totalTime}
+            {!isExplaining ? (
+              <button
+                onClick={handleStartExplanation}
+                className="px-3 sm:px-5 py-1.5 sm:py-2 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 text-white font-medium hover:from-pink-400 hover:to-purple-400 transition-all flex items-center gap-2 text-sm sm:text-base shadow-lg"
+              >
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="hidden sm:inline">Start Guide</span>
+                <span className="sm:hidden">Guide</span>
+              </button>
+            ) : (
+              <button
+                onClick={handleStopExplanation}
+                className="px-3 sm:px-5 py-1.5 sm:py-2 rounded-lg bg-red-500/80 text-white font-medium hover:bg-red-500 transition-all flex items-center gap-2 text-sm sm:text-base"
+              >
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                </svg>
+                <span className="hidden sm:inline">Stop Guide</span>
+                <span className="sm:hidden">Stop</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
       
+      {isExplaining && (
+        <div className="absolute top-16 sm:top-20 left-1/2 -translate-x-1/2 z-40 px-4 py-2 rounded-full bg-gradient-to-r from-pink-500/20 to-purple-500/20 backdrop-blur-sm border border-pink-500/30">
+          <p className="text-white text-xs sm:text-sm font-medium flex items-center gap-2">
+            <span className="w-2 h-2 bg-pink-400 rounded-full animate-pulse"></span>
+            AI Guide is explaining the algorithm...
+          </p>
+        </div>
+      )}
+      
       <div className="absolute inset-0">
-        <GanttChart3DFullscreen 
+        <GanttChart3DWithCharacter 
           ganttChart={data.ganttChart}
           processes={data.processes}
-          animatedTime={animatedTime}
+          algorithm={algorithm}
+          isExplaining={isExplaining}
+          showAllBlocks={showAllBlocks}
         />
       </div>
       
@@ -152,7 +150,9 @@ function ThreeDViewContent() {
             </div>
           ))}
         </div>
-        <p className="text-center text-gray-500 text-[10px] sm:text-xs mt-1.5 sm:mt-2">Drag to rotate • Scroll to zoom</p>
+        <p className="text-center text-gray-500 text-[10px] sm:text-xs mt-1.5 sm:mt-2">
+          Drag to rotate • Scroll to zoom • Click "Start Guide" for AI explanation
+        </p>
       </footer>
     </div>
   );

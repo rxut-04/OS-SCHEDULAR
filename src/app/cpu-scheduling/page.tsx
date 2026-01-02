@@ -194,14 +194,15 @@ export default function CpuSchedulingPage() {
                   />
 
                   <GanttChart
-                    ganttChart={result.ganttChart}
-                    steps={result.steps}
-                    processes={inputProcesses}
-                    isPlaying={isPlaying}
-                    speed={speed}
-                    onStepChange={handleStepChange}
-                    currentStep={currentStep}
-                  />
+                      ganttChart={result.ganttChart}
+                      steps={result.steps}
+                      processes={inputProcesses}
+                      isPlaying={isPlaying}
+                      speed={speed}
+                      onStepChange={handleStepChange}
+                      currentStep={currentStep}
+                      algorithm={currentAlgo?.fullName}
+                    />
 
                   <ComparisonChart 
                     processes={inputProcesses}
