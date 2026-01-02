@@ -2,7 +2,7 @@
 
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Html, Stars, Line, Text } from '@react-three/drei';
+import { OrbitControls, Html, Stars, Line } from '@react-three/drei';
 import * as THREE from 'three';
 import { GanttBlock, Process } from '@/lib/algorithms/types';
 import { Character3D, SpeechBubble, generateAlgorithmSteps } from './Character3D';
@@ -106,7 +106,6 @@ function ProcessLabel({ process, rowIndex }: { process: Process; rowIndex: numbe
 }
 
 function AxisSystem({ totalTime, processCount }: { totalTime: number; processCount: number }) {
-  const xAxisLength = 18;
   const yAxisLength = processCount * 2.5 + 2;
   
   const timeMarkers = useMemo(() => {
@@ -175,25 +174,6 @@ function AxisSystem({ totalTime, processCount }: { totalTime: number; processCou
   );
 }
 
-function CameraController({ processCount, characterPos }: { processCount: number; characterPos: [number, number, number] }) {
-  const { camera } = useThree();
-  const targetRef = useRef(new THREE.Vector3());
-  
-  useEffect(() => {
-    const zCenter = (processCount - 1) * 1.25;
-    camera.position.set(2, 12, zCenter + 22);
-    targetRef.current.set(0, 0, zCenter);
-  }, [camera, processCount]);
-  
-  useFrame(() => {
-    const targetZ = characterPos[2];
-    targetRef.current.z += (targetZ * 0.3 - targetRef.current.z * 0.3) * 0.02;
-    camera.lookAt(targetRef.current);
-  });
-  
-  return null;
-}
-
 interface CharacterControllerProps {
   ganttChart: GanttBlock[];
   processes: Process[];
@@ -201,7 +181,6 @@ interface CharacterControllerProps {
   isExplaining: boolean;
   totalTime: number;
   onBlockPlace: (blockIndex: number) => void;
-  onPositionChange: (pos: [number, number, number]) => void;
 }
 
 function CharacterController({
@@ -210,8 +189,7 @@ function CharacterController({
   algorithm,
   isExplaining,
   totalTime,
-  onBlockPlace,
-  onPositionChange
+  onBlockPlace
 }: CharacterControllerProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [characterPosition, setCharacterPosition] = useState<[number, number, number]>([-12, 0, 0]);
@@ -251,7 +229,6 @@ function CharacterController({
     
     if (step.targetPosition) {
       setTargetPosition(step.targetPosition);
-      onPositionChange(step.targetPosition);
     }
     
     switch (step.type) {
@@ -310,7 +287,7 @@ function CharacterController({
         setHoldingBlock(null);
         break;
     }
-  }, [steps, ganttChart, processes, totalTime, advanceStep, onBlockPlace, onPositionChange]);
+  }, [steps, ganttChart, processes, totalTime, advanceStep, onBlockPlace]);
   
   useEffect(() => {
     if (timerRef.current) {
@@ -382,7 +359,7 @@ function SceneWithCharacter({
 }: SceneWithCharacterProps) {
   const [visibleBlocks, setVisibleBlocks] = useState<Set<number>>(new Set());
   const [placingBlock, setPlacingBlock] = useState<number | null>(null);
-  const [characterPos, setCharacterPos] = useState<[number, number, number]>([-12, 0, 0]);
+  const controlsRef = useRef<any>(null);
   
   const totalTime = ganttChart.length > 0 ? ganttChart[ganttChart.length - 1].endTime : 1;
   const zCenter = (processes.length - 1) * 1.25;
@@ -405,15 +382,9 @@ function SceneWithCharacter({
       setPlacingBlock(null);
     }, 600);
   }, []);
-  
-  const handlePositionChange = useCallback((pos: [number, number, number]) => {
-    setCharacterPos(pos);
-  }, []);
 
   return (
     <>
-      <CameraController processCount={processes.length} characterPos={characterPos} />
-      
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 25, 15]} intensity={1.5} castShadow />
       <pointLight position={[-15, 20, -10]} intensity={0.8} color="#22d3ee" />
@@ -423,11 +394,11 @@ function SceneWithCharacter({
       <Stars radius={200} depth={80} count={4000} factor={6} saturation={0} fade speed={0.3} />
       
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, zCenter]} receiveShadow>
-        <planeGeometry args={[32, processes.length * 2.5 + 10]} />
+        <planeGeometry args={[50, 50]} />
         <meshStandardMaterial color="#0a0a1a" opacity={0.98} transparent />
       </mesh>
       
-      <gridHelper args={[32, 32, '#1e1e3a', '#161628']} position={[0, 0.01, zCenter]} />
+      <gridHelper args={[50, 50, '#1e1e3a', '#161628']} position={[0, 0.01, zCenter]} />
       
       <AxisSystem totalTime={totalTime} processCount={processes.length} />
       
@@ -463,19 +434,32 @@ function SceneWithCharacter({
         isExplaining={isExplaining}
         totalTime={totalTime}
         onBlockPlace={handleBlockPlace}
-        onPositionChange={handlePositionChange}
       />
       
       <OrbitControls
-        target={[0, 0, zCenter]}
+        ref={controlsRef}
         enablePan={true}
-        minDistance={10}
-        maxDistance={50}
-        minPolarAngle={0.2}
-        maxPolarAngle={Math.PI / 2.1}
-        autoRotate={false}
+        enableZoom={true}
+        enableRotate={true}
+        minDistance={3}
+        maxDistance={100}
+        minPolarAngle={0}
+        maxPolarAngle={Math.PI / 2}
+        panSpeed={1.5}
+        rotateSpeed={0.8}
+        zoomSpeed={1.2}
         enableDamping={true}
-        dampingFactor={0.08}
+        dampingFactor={0.1}
+        screenSpacePanning={true}
+        mouseButtons={{
+          LEFT: THREE.MOUSE.ROTATE,
+          MIDDLE: THREE.MOUSE.DOLLY,
+          RIGHT: THREE.MOUSE.PAN
+        }}
+        touches={{
+          ONE: THREE.TOUCH.ROTATE,
+          TWO: THREE.TOUCH.DOLLY_PAN
+        }}
       />
     </>
   );
@@ -496,6 +480,8 @@ export function GanttChart3DWithCharacter({
   isExplaining,
   showAllBlocks = false
 }: GanttChart3DWithCharacterProps) {
+  const zCenter = processes.length > 0 ? (processes.length - 1) * 1.25 : 0;
+  
   if (!ganttChart.length || !processes.length) {
     return (
       <div className="w-full h-full bg-[#0a0a15] flex items-center justify-center text-gray-500">
@@ -508,9 +494,10 @@ export function GanttChart3DWithCharacter({
     <div className="w-full h-full" style={{ minHeight: '100vh' }}>
       <Canvas
         camera={{ 
-          fov: 55,
+          position: [0, 15, zCenter + 25],
+          fov: 50,
           near: 0.1,
-          far: 400
+          far: 500
         }}
         gl={{ antialias: true, alpha: true }}
         shadows

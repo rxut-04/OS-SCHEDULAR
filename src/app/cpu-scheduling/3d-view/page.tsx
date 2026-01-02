@@ -151,7 +151,7 @@ function ThreeDViewContent() {
           ))}
         </div>
         <p className="text-center text-gray-500 text-[10px] sm:text-xs mt-1.5 sm:mt-2">
-          Drag to rotate • Scroll to zoom • Click "Start Guide" for AI explanation
+          Left-drag: Rotate • Right-drag: Pan • Scroll: Zoom anywhere • Click "Start Guide" for AI explanation
         </p>
       </footer>
     </div>
