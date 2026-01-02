@@ -2,7 +2,7 @@
 
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Html, Stars, Line } from '@react-three/drei';
+import { Html, Stars, Line, MapControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { GanttBlock, Process } from '@/lib/algorithms/types';
 import { Character3D, SpeechBubble, generateAlgorithmSteps } from './Character3D';
@@ -342,6 +342,224 @@ function CharacterController({
   );
 }
 
+function GoogleMapsCamera() {
+  const { camera, gl } = useThree();
+  const isDragging = useRef(false);
+  const isPinching = useRef(false);
+  const lastMousePos = useRef({ x: 0, y: 0 });
+  const lastTouchDistance = useRef(0);
+  const lastTouchCenter = useRef({ x: 0, y: 0 });
+  const velocity = useRef({ x: 0, z: 0 });
+  const targetPosition = useRef(new THREE.Vector3(0, 15, 20));
+  const currentPosition = useRef(new THREE.Vector3(0, 15, 20));
+  
+  useEffect(() => {
+    const canvas = gl.domElement;
+    
+    const getWorldPointFromScreen = (screenX: number, screenY: number) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = ((screenX - rect.left) / rect.width) * 2 - 1;
+      const y = -((screenY - rect.top) / rect.height) * 2 + 1;
+      
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
+      
+      const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+      const intersectPoint = new THREE.Vector3();
+      raycaster.ray.intersectPlane(groundPlane, intersectPoint);
+      
+      return intersectPoint;
+    };
+    
+    const handleMouseDown = (e: MouseEvent) => {
+      if (e.button === 0 || e.button === 2) {
+        isDragging.current = true;
+        lastMousePos.current = { x: e.clientX, y: e.clientY };
+        velocity.current = { x: 0, z: 0 };
+        canvas.style.cursor = 'grabbing';
+      }
+    };
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current) return;
+      
+      const deltaX = e.clientX - lastMousePos.current.x;
+      const deltaY = e.clientY - lastMousePos.current.y;
+      
+      const moveFactor = camera.position.y * 0.003;
+      
+      targetPosition.current.x -= deltaX * moveFactor;
+      targetPosition.current.z -= deltaY * moveFactor;
+      
+      velocity.current = {
+        x: -deltaX * moveFactor,
+        z: -deltaY * moveFactor
+      };
+      
+      lastMousePos.current = { x: e.clientX, y: e.clientY };
+    };
+    
+    const handleMouseUp = () => {
+      isDragging.current = false;
+      canvas.style.cursor = 'grab';
+    };
+    
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      
+      const zoomPoint = getWorldPointFromScreen(e.clientX, e.clientY);
+      const zoomFactor = e.deltaY > 0 ? 1.15 : 0.87;
+      const newY = Math.max(3, Math.min(80, camera.position.y * zoomFactor));
+      const actualZoomFactor = newY / camera.position.y;
+      
+      const offsetX = camera.position.x - zoomPoint.x;
+      const offsetZ = camera.position.z - zoomPoint.z;
+      
+      targetPosition.current.x = zoomPoint.x + offsetX * actualZoomFactor;
+      targetPosition.current.z = zoomPoint.z + offsetZ * actualZoomFactor;
+      targetPosition.current.y = newY;
+    };
+    
+    const getTouchDistance = (touches: TouchList) => {
+      if (touches.length < 2) return 0;
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
+    
+    const getTouchCenter = (touches: TouchList) => {
+      if (touches.length < 2) return { x: touches[0].clientX, y: touches[0].clientY };
+      return {
+        x: (touches[0].clientX + touches[1].clientX) / 2,
+        y: (touches[0].clientY + touches[1].clientY) / 2
+      };
+    };
+    
+    const handleTouchStart = (e: TouchEvent) => {
+      e.preventDefault();
+      velocity.current = { x: 0, z: 0 };
+      
+      if (e.touches.length === 1) {
+        isDragging.current = true;
+        lastMousePos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      } else if (e.touches.length === 2) {
+        isPinching.current = true;
+        isDragging.current = false;
+        lastTouchDistance.current = getTouchDistance(e.touches);
+        lastTouchCenter.current = getTouchCenter(e.touches);
+      }
+    };
+    
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      
+      if (e.touches.length === 1 && isDragging.current) {
+        const deltaX = e.touches[0].clientX - lastMousePos.current.x;
+        const deltaY = e.touches[0].clientY - lastMousePos.current.y;
+        
+        const moveFactor = camera.position.y * 0.004;
+        
+        targetPosition.current.x -= deltaX * moveFactor;
+        targetPosition.current.z -= deltaY * moveFactor;
+        
+        velocity.current = {
+          x: -deltaX * moveFactor,
+          z: -deltaY * moveFactor
+        };
+        
+        lastMousePos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      } else if (e.touches.length === 2 && isPinching.current) {
+        const newDistance = getTouchDistance(e.touches);
+        const newCenter = getTouchCenter(e.touches);
+        
+        const centerDeltaX = newCenter.x - lastTouchCenter.current.x;
+        const centerDeltaY = newCenter.y - lastTouchCenter.current.y;
+        const moveFactor = camera.position.y * 0.003;
+        targetPosition.current.x -= centerDeltaX * moveFactor;
+        targetPosition.current.z -= centerDeltaY * moveFactor;
+        
+        if (lastTouchDistance.current > 0) {
+          const zoomPoint = getWorldPointFromScreen(newCenter.x, newCenter.y);
+          const pinchRatio = lastTouchDistance.current / newDistance;
+          const newY = Math.max(3, Math.min(80, camera.position.y * pinchRatio));
+          const actualZoomFactor = newY / camera.position.y;
+          
+          const offsetX = camera.position.x - zoomPoint.x;
+          const offsetZ = camera.position.z - zoomPoint.z;
+          
+          targetPosition.current.x = zoomPoint.x + offsetX * actualZoomFactor;
+          targetPosition.current.z = zoomPoint.z + offsetZ * actualZoomFactor;
+          targetPosition.current.y = newY;
+        }
+        
+        lastTouchDistance.current = newDistance;
+        lastTouchCenter.current = newCenter;
+      }
+    };
+    
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length === 0) {
+        isDragging.current = false;
+        isPinching.current = false;
+      } else if (e.touches.length === 1) {
+        isPinching.current = false;
+        isDragging.current = true;
+        lastMousePos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    };
+    
+    canvas.addEventListener('mousedown', handleMouseDown);
+    canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('mouseup', handleMouseUp);
+    canvas.addEventListener('mouseleave', handleMouseUp);
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    canvas.addEventListener('touchend', handleTouchEnd);
+    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+    
+    canvas.style.cursor = 'grab';
+    canvas.style.touchAction = 'none';
+    
+    currentPosition.current.copy(camera.position);
+    targetPosition.current.copy(camera.position);
+    
+    return () => {
+      canvas.removeEventListener('mousedown', handleMouseDown);
+      canvas.removeEventListener('mousemove', handleMouseMove);
+      canvas.removeEventListener('mouseup', handleMouseUp);
+      canvas.removeEventListener('mouseleave', handleMouseUp);
+      canvas.removeEventListener('wheel', handleWheel);
+      canvas.removeEventListener('touchstart', handleTouchStart);
+      canvas.removeEventListener('touchmove', handleTouchMove);
+      canvas.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [camera, gl]);
+  
+  useFrame(() => {
+    if (!isDragging.current && !isPinching.current) {
+      velocity.current.x *= 0.95;
+      velocity.current.z *= 0.95;
+      
+      if (Math.abs(velocity.current.x) > 0.001 || Math.abs(velocity.current.z) > 0.001) {
+        targetPosition.current.x += velocity.current.x;
+        targetPosition.current.z += velocity.current.z;
+      }
+    }
+    
+    currentPosition.current.lerp(targetPosition.current, 0.12);
+    camera.position.copy(currentPosition.current);
+    
+    camera.lookAt(
+      currentPosition.current.x,
+      0,
+      currentPosition.current.z - currentPosition.current.y * 0.5
+    );
+  });
+  
+  return null;
+}
+
 interface SceneWithCharacterProps {
   ganttChart: GanttBlock[];
   processes: Process[];
@@ -359,7 +577,6 @@ function SceneWithCharacter({
 }: SceneWithCharacterProps) {
   const [visibleBlocks, setVisibleBlocks] = useState<Set<number>>(new Set());
   const [placingBlock, setPlacingBlock] = useState<number | null>(null);
-  const controlsRef = useRef<any>(null);
   
   const totalTime = ganttChart.length > 0 ? ganttChart[ganttChart.length - 1].endTime : 1;
   const zCenter = (processes.length - 1) * 1.25;
@@ -394,11 +611,11 @@ function SceneWithCharacter({
       <Stars radius={200} depth={80} count={4000} factor={6} saturation={0} fade speed={0.3} />
       
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, zCenter]} receiveShadow>
-        <planeGeometry args={[50, 50]} />
+        <planeGeometry args={[200, 200]} />
         <meshStandardMaterial color="#0a0a1a" opacity={0.98} transparent />
       </mesh>
       
-      <gridHelper args={[50, 50, '#1e1e3a', '#161628']} position={[0, 0.01, zCenter]} />
+      <gridHelper args={[200, 200, '#1e1e3a', '#161628']} position={[0, 0.01, zCenter]} />
       
       <AxisSystem totalTime={totalTime} processCount={processes.length} />
       
@@ -436,31 +653,7 @@ function SceneWithCharacter({
         onBlockPlace={handleBlockPlace}
       />
       
-      <OrbitControls
-        ref={controlsRef}
-        enablePan={true}
-        enableZoom={true}
-        enableRotate={true}
-        minDistance={3}
-        maxDistance={100}
-        minPolarAngle={0}
-        maxPolarAngle={Math.PI / 2}
-        panSpeed={1.5}
-        rotateSpeed={0.8}
-        zoomSpeed={1.2}
-        enableDamping={true}
-        dampingFactor={0.1}
-        screenSpacePanning={true}
-        mouseButtons={{
-          LEFT: THREE.MOUSE.ROTATE,
-          MIDDLE: THREE.MOUSE.DOLLY,
-          RIGHT: THREE.MOUSE.PAN
-        }}
-        touches={{
-          ONE: THREE.TOUCH.ROTATE,
-          TWO: THREE.TOUCH.DOLLY_PAN
-        }}
-      />
+      <GoogleMapsCamera />
     </>
   );
 }
@@ -494,10 +687,10 @@ export function GanttChart3DWithCharacter({
     <div className="w-full h-full" style={{ minHeight: '100vh' }}>
       <Canvas
         camera={{ 
-          position: [0, 15, zCenter + 25],
+          position: [0, 20, zCenter + 25],
           fov: 50,
           near: 0.1,
-          far: 500
+          far: 1000
         }}
         gl={{ antialias: true, alpha: true }}
         shadows
