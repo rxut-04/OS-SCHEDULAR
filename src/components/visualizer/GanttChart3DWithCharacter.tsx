@@ -3,7 +3,7 @@
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Html, Stars, Line } from '@react-three/drei';
-import * as THREE from 'three';
+import type { Mesh } from 'three';
 import { GanttBlock, Process } from '@/lib/algorithms/types';
 import { Character3D, SpeechBubble, generateAlgorithmSteps, useVoice } from './Character3D';
 
@@ -17,7 +17,7 @@ interface AnimatedBlockProps {
 }
 
 function AnimatedBlock({ block, process, totalTime, rowIndex, isVisible, isBeingPlaced }: AnimatedBlockProps) {
-  const meshRef = useRef<THREE.Mesh>(null);
+  const meshRef = useRef<Mesh>(null);
   const [animationProgress, setAnimationProgress] = useState(0);
   
   const width = Math.max(((block.endTime - block.startTime) / totalTime) * 16, 0.5);
@@ -362,57 +362,43 @@ function GoogleMapsCamera() {
   const { camera, gl } = useThree();
   const isDragging = useRef(false);
   const isPinching = useRef(false);
-  const lastMousePos = useRef({ x: 0, y: 0 });
-  const lastTouchDistance = useRef(0);
+  const lastPos = useRef({ x: 0, y: 0 });
+  const lastTouchDist = useRef(0);
   const lastTouchCenter = useRef({ x: 0, y: 0 });
   const velocity = useRef({ x: 0, z: 0 });
-  const targetPosition = useRef(new THREE.Vector3(0, 15, 20));
-  const currentPosition = useRef(new THREE.Vector3(0, 15, 20));
+  
+  const camTarget = useRef({ x: 0, z: 5, zoom: 25 });
+  const camCurrent = useRef({ x: 0, z: 5, zoom: 25 });
   
   useEffect(() => {
     const canvas = gl.domElement;
     
-    const getWorldPointFromScreen = (screenX: number, screenY: number) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = ((screenX - rect.left) / rect.width) * 2 - 1;
-      const y = -((screenY - rect.top) / rect.height) * 2 + 1;
-      
-      const raycaster = new THREE.Raycaster();
-      raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
-      
-      const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-      const intersectPoint = new THREE.Vector3();
-      raycaster.ray.intersectPlane(groundPlane, intersectPoint);
-      
-      return intersectPoint;
-    };
+    camCurrent.current = { x: 0, z: 5, zoom: 25 };
+    camTarget.current = { x: 0, z: 5, zoom: 25 };
     
     const handleMouseDown = (e: MouseEvent) => {
-      if (e.button === 0 || e.button === 2) {
-        isDragging.current = true;
-        lastMousePos.current = { x: e.clientX, y: e.clientY };
-        velocity.current = { x: 0, z: 0 };
-        canvas.style.cursor = 'grabbing';
-      }
+      isDragging.current = true;
+      lastPos.current = { x: e.clientX, y: e.clientY };
+      velocity.current = { x: 0, z: 0 };
+      canvas.style.cursor = 'grabbing';
+      e.preventDefault();
     };
     
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDragging.current) return;
       
-      const deltaX = e.clientX - lastMousePos.current.x;
-      const deltaY = e.clientY - lastMousePos.current.y;
+      const dx = e.clientX - lastPos.current.x;
+      const dy = e.clientY - lastPos.current.y;
       
-      const moveFactor = camera.position.y * 0.003;
+      const scale = camCurrent.current.zoom * 0.002;
       
-      targetPosition.current.x -= deltaX * moveFactor;
-      targetPosition.current.z -= deltaY * moveFactor;
+      camTarget.current.x -= dx * scale;
+      camTarget.current.z -= dy * scale;
       
-      velocity.current = {
-        x: -deltaX * moveFactor,
-        z: -deltaY * moveFactor
-      };
+      velocity.current.x = -dx * scale;
+      velocity.current.z = -dy * scale;
       
-      lastMousePos.current = { x: e.clientX, y: e.clientY };
+      lastPos.current = { x: e.clientX, y: e.clientY };
     };
     
     const handleMouseUp = () => {
@@ -422,32 +408,36 @@ function GoogleMapsCamera() {
     
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
+      e.stopPropagation();
       
-      const zoomPoint = getWorldPointFromScreen(e.clientX, e.clientY);
-      const zoomFactor = e.deltaY > 0 ? 1.15 : 0.87;
-      const newY = Math.max(3, Math.min(80, camera.position.y * zoomFactor));
-      const actualZoomFactor = newY / camera.position.y;
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = (e.clientX - rect.left) / rect.width * 2 - 1;
+      const mouseY = -(e.clientY - rect.top) / rect.height * 2 + 1;
       
-      const offsetX = camera.position.x - zoomPoint.x;
-      const offsetZ = camera.position.z - zoomPoint.z;
+      const oldZoom = camTarget.current.zoom;
+      const zoomDelta = e.deltaY > 0 ? 1.12 : 0.89;
+      const newZoom = Math.max(5, Math.min(100, oldZoom * zoomDelta));
       
-      targetPosition.current.x = zoomPoint.x + offsetX * actualZoomFactor;
-      targetPosition.current.z = zoomPoint.z + offsetZ * actualZoomFactor;
-      targetPosition.current.y = newY;
+      const worldX = camTarget.current.x + mouseX * oldZoom * 0.5;
+      const worldZ = camTarget.current.z - mouseY * oldZoom * 0.35;
+      
+      camTarget.current.x = worldX - mouseX * newZoom * 0.5;
+      camTarget.current.z = worldZ + mouseY * newZoom * 0.35;
+      camTarget.current.zoom = newZoom;
     };
     
-    const getTouchDistance = (touches: TouchList) => {
-      if (touches.length < 2) return 0;
-      const dx = touches[0].clientX - touches[1].clientX;
-      const dy = touches[0].clientY - touches[1].clientY;
+    const getTouchDist = (t: TouchList) => {
+      if (t.length < 2) return 0;
+      const dx = t[0].clientX - t[1].clientX;
+      const dy = t[0].clientY - t[1].clientY;
       return Math.sqrt(dx * dx + dy * dy);
     };
     
-    const getTouchCenter = (touches: TouchList) => {
-      if (touches.length < 2) return { x: touches[0].clientX, y: touches[0].clientY };
+    const getTouchCenter = (t: TouchList) => {
+      if (t.length < 2) return { x: t[0].clientX, y: t[0].clientY };
       return {
-        x: (touches[0].clientX + touches[1].clientX) / 2,
-        y: (touches[0].clientY + touches[1].clientY) / 2
+        x: (t[0].clientX + t[1].clientX) / 2,
+        y: (t[0].clientY + t[1].clientY) / 2
       };
     };
     
@@ -457,11 +447,12 @@ function GoogleMapsCamera() {
       
       if (e.touches.length === 1) {
         isDragging.current = true;
-        lastMousePos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      } else if (e.touches.length === 2) {
-        isPinching.current = true;
+        isPinching.current = false;
+        lastPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      } else if (e.touches.length >= 2) {
         isDragging.current = false;
-        lastTouchDistance.current = getTouchDistance(e.touches);
+        isPinching.current = true;
+        lastTouchDist.current = getTouchDist(e.touches);
         lastTouchCenter.current = getTouchCenter(e.touches);
       }
     };
@@ -469,46 +460,47 @@ function GoogleMapsCamera() {
     const handleTouchMove = (e: TouchEvent) => {
       e.preventDefault();
       
-      if (e.touches.length === 1 && isDragging.current) {
-        const deltaX = e.touches[0].clientX - lastMousePos.current.x;
-        const deltaY = e.touches[0].clientY - lastMousePos.current.y;
+      if (e.touches.length === 1 && isDragging.current && !isPinching.current) {
+        const dx = e.touches[0].clientX - lastPos.current.x;
+        const dy = e.touches[0].clientY - lastPos.current.y;
         
-        const moveFactor = camera.position.y * 0.004;
+        const scale = camCurrent.current.zoom * 0.003;
         
-        targetPosition.current.x -= deltaX * moveFactor;
-        targetPosition.current.z -= deltaY * moveFactor;
+        camTarget.current.x -= dx * scale;
+        camTarget.current.z -= dy * scale;
         
-        velocity.current = {
-          x: -deltaX * moveFactor,
-          z: -deltaY * moveFactor
-        };
+        velocity.current.x = -dx * scale;
+        velocity.current.z = -dy * scale;
         
-        lastMousePos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      } else if (e.touches.length === 2 && isPinching.current) {
-        const newDistance = getTouchDistance(e.touches);
+        lastPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      } else if (e.touches.length >= 2 && isPinching.current) {
+        const newDist = getTouchDist(e.touches);
         const newCenter = getTouchCenter(e.touches);
         
-        const centerDeltaX = newCenter.x - lastTouchCenter.current.x;
-        const centerDeltaY = newCenter.y - lastTouchCenter.current.y;
-        const moveFactor = camera.position.y * 0.003;
-        targetPosition.current.x -= centerDeltaX * moveFactor;
-        targetPosition.current.z -= centerDeltaY * moveFactor;
+        const centerDx = newCenter.x - lastTouchCenter.current.x;
+        const centerDy = newCenter.y - lastTouchCenter.current.y;
+        const panScale = camCurrent.current.zoom * 0.002;
+        camTarget.current.x -= centerDx * panScale;
+        camTarget.current.z -= centerDy * panScale;
         
-        if (lastTouchDistance.current > 0) {
-          const zoomPoint = getWorldPointFromScreen(newCenter.x, newCenter.y);
-          const pinchRatio = lastTouchDistance.current / newDistance;
-          const newY = Math.max(3, Math.min(80, camera.position.y * pinchRatio));
-          const actualZoomFactor = newY / camera.position.y;
+        if (lastTouchDist.current > 0 && newDist > 0) {
+          const rect = canvas.getBoundingClientRect();
+          const touchX = (newCenter.x - rect.left) / rect.width * 2 - 1;
+          const touchY = -(newCenter.y - rect.top) / rect.height * 2 + 1;
           
-          const offsetX = camera.position.x - zoomPoint.x;
-          const offsetZ = camera.position.z - zoomPoint.z;
+          const oldZoom = camTarget.current.zoom;
+          const pinchRatio = lastTouchDist.current / newDist;
+          const newZoom = Math.max(5, Math.min(100, oldZoom * pinchRatio));
           
-          targetPosition.current.x = zoomPoint.x + offsetX * actualZoomFactor;
-          targetPosition.current.z = zoomPoint.z + offsetZ * actualZoomFactor;
-          targetPosition.current.y = newY;
+          const worldX = camTarget.current.x + touchX * oldZoom * 0.5;
+          const worldZ = camTarget.current.z - touchY * oldZoom * 0.35;
+          
+          camTarget.current.x = worldX - touchX * newZoom * 0.5;
+          camTarget.current.z = worldZ + touchY * newZoom * 0.35;
+          camTarget.current.zoom = newZoom;
         }
         
-        lastTouchDistance.current = newDistance;
+        lastTouchDist.current = newDist;
         lastTouchCenter.current = newCenter;
       }
     };
@@ -520,14 +512,14 @@ function GoogleMapsCamera() {
       } else if (e.touches.length === 1) {
         isPinching.current = false;
         isDragging.current = true;
-        lastMousePos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        lastPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        lastTouchDist.current = 0;
       }
     };
     
     canvas.addEventListener('mousedown', handleMouseDown);
-    canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('mouseup', handleMouseUp);
-    canvas.addEventListener('mouseleave', handleMouseUp);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
     canvas.addEventListener('wheel', handleWheel, { passive: false });
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
@@ -537,39 +529,45 @@ function GoogleMapsCamera() {
     canvas.style.cursor = 'grab';
     canvas.style.touchAction = 'none';
     
-    currentPosition.current.copy(camera.position);
-    targetPosition.current.copy(camera.position);
-    
     return () => {
       canvas.removeEventListener('mousedown', handleMouseDown);
-      canvas.removeEventListener('mousemove', handleMouseMove);
-      canvas.removeEventListener('mouseup', handleMouseUp);
-      canvas.removeEventListener('mouseleave', handleMouseUp);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
       canvas.removeEventListener('wheel', handleWheel);
       canvas.removeEventListener('touchstart', handleTouchStart);
       canvas.removeEventListener('touchmove', handleTouchMove);
       canvas.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [camera, gl]);
+  }, [gl]);
   
   useFrame(() => {
     if (!isDragging.current && !isPinching.current) {
-      velocity.current.x *= 0.95;
-      velocity.current.z *= 0.95;
+      velocity.current.x *= 0.92;
+      velocity.current.z *= 0.92;
       
       if (Math.abs(velocity.current.x) > 0.001 || Math.abs(velocity.current.z) > 0.001) {
-        targetPosition.current.x += velocity.current.x;
-        targetPosition.current.z += velocity.current.z;
+        camTarget.current.x += velocity.current.x * 0.5;
+        camTarget.current.z += velocity.current.z * 0.5;
       }
     }
     
-    currentPosition.current.lerp(targetPosition.current, 0.12);
-    camera.position.copy(currentPosition.current);
+    camCurrent.current.x += (camTarget.current.x - camCurrent.current.x) * 0.15;
+    camCurrent.current.z += (camTarget.current.z - camCurrent.current.z) * 0.15;
+    camCurrent.current.zoom += (camTarget.current.zoom - camCurrent.current.zoom) * 0.15;
+    
+    const height = camCurrent.current.zoom;
+    const tiltOffset = height * 0.6;
+    
+    camera.position.set(
+      camCurrent.current.x,
+      height,
+      camCurrent.current.z + tiltOffset
+    );
     
     camera.lookAt(
-      currentPosition.current.x,
+      camCurrent.current.x,
       0,
-      currentPosition.current.z - currentPosition.current.y * 0.5
+      camCurrent.current.z
     );
   });
   

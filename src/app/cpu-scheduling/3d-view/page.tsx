@@ -150,9 +150,9 @@ function ThreeDViewContent() {
             </div>
           ))}
         </div>
-        <p className="text-center text-gray-500 text-[10px] sm:text-xs mt-1.5 sm:mt-2">
-          Drag: Pan • Scroll: Zoom • Start Guide: AI speaks & explains the algorithm!
-        </p>
+          <p className="text-center text-gray-500 text-[10px] sm:text-xs mt-1.5 sm:mt-2">
+            1-Finger/Mouse: Pan • 2-Finger/Scroll: Zoom • Explore freely like Google Maps!
+          </p>
       </footer>
     </div>
   );
