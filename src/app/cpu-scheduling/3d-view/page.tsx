@@ -75,7 +75,7 @@ function ThreeDViewContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a15] flex flex-col">
+    <div className="h-screen w-screen bg-[#0a0a15] flex flex-col overflow-hidden">
       <header className="absolute top-0 left-0 right-0 z-50 p-2 sm:p-4 flex items-center justify-between gap-2">
         <Link 
           href="/cpu-scheduling"
@@ -128,7 +128,7 @@ function ThreeDViewContent() {
         </div>
       </header>
       
-      <div className="flex-1">
+      <div className="absolute inset-0">
         <GanttChart3DFullscreen 
           ganttChart={data.ganttChart}
           processes={data.processes}

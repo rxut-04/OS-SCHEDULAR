@@ -113,7 +113,7 @@ function CameraController({ processCount }: { processCount: number }) {
   
   useMemo(() => {
     const zCenter = (processCount - 1) * 1.25;
-    camera.position.set(0, 12, zCenter + 18);
+    camera.position.set(0, 10, zCenter + 16);
     camera.lookAt(0, 0, zCenter);
   }, [camera, processCount]);
   
@@ -239,7 +239,7 @@ export function GanttChart3DFullscreen({ ganttChart, processes, animatedTime }: 
   }
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full" style={{ minHeight: '100vh' }}>
       <Canvas
         camera={{ 
           fov: 50,
@@ -247,6 +247,7 @@ export function GanttChart3DFullscreen({ ganttChart, processes, animatedTime }: 
           far: 300
         }}
         gl={{ antialias: true, alpha: true }}
+        style={{ width: '100%', height: '100%' }}
       >
         <Scene 
           ganttChart={ganttChart} 
