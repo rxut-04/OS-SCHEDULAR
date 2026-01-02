@@ -3,7 +3,7 @@
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Html, Stars, Line } from '@react-three/drei';
-import type { Mesh } from 'three';
+import * as THREE from 'three';
 import { GanttBlock, Process } from '@/lib/algorithms/types';
 import { Character3D, SpeechBubble, generateAlgorithmSteps, useVoice } from './Character3D';
 
@@ -17,7 +17,7 @@ interface AnimatedBlockProps {
 }
 
 function AnimatedBlock({ block, process, totalTime, rowIndex, isVisible, isBeingPlaced }: AnimatedBlockProps) {
-  const meshRef = useRef<Mesh>(null);
+  const meshRef = useRef<THREE.Mesh>(null);
   const [animationProgress, setAnimationProgress] = useState(0);
   
   const width = Math.max(((block.endTime - block.startTime) / totalTime) * 16, 0.5);
