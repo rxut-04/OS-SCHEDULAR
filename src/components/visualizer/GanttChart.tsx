@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, Suspense } from 'react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { GanttBlock, ExecutionStep, Process } from '@/lib/algorithms/types';
 
 const GanttChart3D = dynamic(
@@ -73,28 +74,42 @@ export function GanttChart({
           Execution Timeline
         </h3>
         
-        <div className="flex gap-1 p-1 rounded-lg bg-[var(--bg-tertiary)]">
-          <button
-            onClick={() => setView('2d')}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-              view === '2d' 
-                ? 'bg-[var(--accent-primary)] text-white' 
-                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-            }`}
-          >
-            2D
-          </button>
-          <button
-            onClick={() => setView('3d')}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-              view === '3d' 
-                ? 'bg-[var(--accent-primary)] text-white' 
-                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
-            }`}
-          >
-            3D
-          </button>
-        </div>
+<div className="flex items-center gap-2">
+            <div className="flex gap-1 p-1 rounded-lg bg-[var(--bg-tertiary)]">
+              <button
+                onClick={() => setView('2d')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  view === '2d' 
+                    ? 'bg-[var(--accent-primary)] text-white' 
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                }`}
+              >
+                2D
+              </button>
+              <button
+                onClick={() => setView('3d')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  view === '3d' 
+                    ? 'bg-[var(--accent-primary)] text-white' 
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                }`}
+              >
+                3D
+              </button>
+            </div>
+            
+            {view === '3d' && (
+              <Link
+                href={`/cpu-scheduling/3d-view?data=${encodeURIComponent(JSON.stringify({ ganttChart, processes }))}`}
+                className="p-2 rounded-lg bg-[var(--bg-tertiary)] text-[var(--text-muted)] hover:text-[var(--accent-primary)] hover:bg-[var(--accent-primary)]/10 transition-all"
+                title="Open fullscreen 3D view"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+              </Link>
+            )}
+          </div>
       </div>
       
       {view === '3d' ? (
