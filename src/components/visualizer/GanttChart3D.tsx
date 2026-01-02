@@ -2,7 +2,7 @@
 
 import { useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Text, RoundedBox } from '@react-three/drei';
+import { OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { GanttBlock, Process } from '@/lib/algorithms/types';
 
@@ -17,84 +17,44 @@ interface ProcessBarProps {
 
 function ProcessBar({ block, process, totalTime, rowIndex, isActive, isPast }: ProcessBarProps) {
   const meshRef = useRef<THREE.Mesh>(null);
-  const glowRef = useRef<THREE.Mesh>(null);
   
-  const width = ((block.endTime - block.startTime) / totalTime) * 10;
+  const width = Math.max(((block.endTime - block.startTime) / totalTime) * 10, 0.3);
   const xPos = ((block.startTime + block.endTime) / 2 / totalTime) * 10 - 5;
-  const zPos = rowIndex * 1.5;
+  const zPos = rowIndex * 1.2;
   
   useFrame((state) => {
     if (meshRef.current && isActive) {
-      meshRef.current.scale.y = 1 + Math.sin(state.clock.elapsedTime * 4) * 0.05;
-    }
-    if (glowRef.current && isActive) {
-      glowRef.current.scale.setScalar(1 + Math.sin(state.clock.elapsedTime * 3) * 0.1);
+      meshRef.current.scale.y = 1 + Math.sin(state.clock.elapsedTime * 4) * 0.08;
     }
   });
 
-  const opacity = isPast || isActive ? 1 : 0.3;
+  const opacity = isPast || isActive ? 1 : 0.4;
 
   return (
-    <group position={[xPos, 0.4, zPos]}>
-      <RoundedBox
-        ref={meshRef}
-        args={[width, 0.6, 0.8]}
-        radius={0.08}
-        smoothness={4}
-      >
+    <group position={[xPos, 0.35, zPos]}>
+      <mesh ref={meshRef}>
+        <boxGeometry args={[width, 0.5, 0.7]} />
         <meshStandardMaterial
           color={process.color}
           transparent
           opacity={opacity}
-          metalness={0.3}
-          roughness={0.4}
+          metalness={0.2}
+          roughness={0.5}
         />
-      </RoundedBox>
+      </mesh>
       
       {isActive && (
-        <mesh ref={glowRef} scale={[1.1, 1.1, 1.1]}>
-          <boxGeometry args={[width, 0.6, 0.8]} />
-          <meshBasicMaterial
-            color={process.color}
-            transparent
-            opacity={0.3}
-          />
+        <mesh scale={[1.15, 1.15, 1.15]}>
+          <boxGeometry args={[width, 0.5, 0.7]} />
+          <meshBasicMaterial color={process.color} transparent opacity={0.25} />
         </mesh>
       )}
       
-      <Text
-        position={[0, 0, 0.45]}
-        fontSize={0.25}
-        color="white"
-        anchorX="center"
-        anchorY="middle"
-        font="/fonts/inter.woff"
-      >
-        {block.endTime - block.startTime}
-      </Text>
-    </group>
-  );
-}
-
-function TimelineMarker({ time, totalTime, animatedTime }: { time: number; totalTime: number; animatedTime: number }) {
-  const xPos = (time / totalTime) * 10 - 5;
-  const isActive = animatedTime >= time;
-  
-  return (
-    <group position={[xPos, 0, -1]}>
-      <mesh position={[0, 0.02, 0]}>
-        <boxGeometry args={[0.02, 0.02, 0.3]} />
-        <meshBasicMaterial color={isActive ? "#6366f1" : "#444"} />
-      </mesh>
-      <Text
-        position={[0, -0.15, 0]}
-        fontSize={0.2}
-        color={isActive ? "#6366f1" : "#666"}
-        anchorX="center"
-        anchorY="top"
-      >
-        {time}
-      </Text>
+      <Html center distanceFactor={8} style={{ pointerEvents: 'none' }}>
+        <span className="text-white text-xs font-bold drop-shadow-lg">
+          {block.endTime - block.startTime}
+        </span>
+      </Html>
     </group>
   );
 }
@@ -105,37 +65,33 @@ function TimeIndicator({ animatedTime, totalTime, processCount }: { animatedTime
   
   useFrame((state) => {
     if (ref.current) {
-      ref.current.material.opacity = 0.6 + Math.sin(state.clock.elapsedTime * 4) * 0.2;
+      const mat = ref.current.material as THREE.MeshBasicMaterial;
+      mat.opacity = 0.5 + Math.sin(state.clock.elapsedTime * 4) * 0.2;
     }
   });
   
   if (animatedTime < 0) return null;
   
   return (
-    <mesh ref={ref} position={[xPos, 0.5, (processCount - 1) * 0.75]}>
-      <boxGeometry args={[0.05, 1.5, processCount * 1.5 + 1]} />
-      <meshBasicMaterial color="#6366f1" transparent opacity={0.6} />
+    <mesh ref={ref} position={[xPos, 0.4, (processCount - 1) * 0.6]}>
+      <boxGeometry args={[0.06, 1.2, processCount * 1.2 + 0.5]} />
+      <meshBasicMaterial color="#22d3ee" transparent opacity={0.6} />
     </mesh>
   );
 }
 
 function ProcessLabel({ process, rowIndex }: { process: Process; rowIndex: number }) {
   return (
-    <group position={[-6, 0.4, rowIndex * 1.5]}>
-      <mesh position={[0.3, 0, 0]}>
-        <sphereGeometry args={[0.15, 16, 16]} />
+    <group position={[-5.8, 0.35, rowIndex * 1.2]}>
+      <mesh>
+        <sphereGeometry args={[0.12, 16, 16]} />
         <meshStandardMaterial color={process.color} />
       </mesh>
-      <Text
-        position={[0.7, 0, 0]}
-        fontSize={0.3}
-        color={process.color}
-        anchorX="left"
-        anchorY="middle"
-        fontWeight="bold"
-      >
-        {process.id}
-      </Text>
+      <Html position={[0.35, 0, 0]} center distanceFactor={8} style={{ pointerEvents: 'none' }}>
+        <span className="text-xs font-bold" style={{ color: process.color }}>
+          {process.id}
+        </span>
+      </Html>
     </group>
   );
 }
@@ -153,7 +109,8 @@ function Scene({
   
   const timeMarkers = useMemo(() => {
     const markers = [];
-    for (let i = 0; i <= totalTime; i++) {
+    const step = totalTime > 15 ? 2 : 1;
+    for (let i = 0; i <= totalTime; i += step) {
       markers.push(i);
     }
     return markers;
@@ -161,13 +118,13 @@ function Scene({
 
   return (
     <>
-      <ambientLight intensity={0.6} />
-      <pointLight position={[10, 10, 10]} intensity={0.8} />
-      <pointLight position={[-10, 5, -10]} intensity={0.4} color="#6366f1" />
+      <ambientLight intensity={0.7} />
+      <pointLight position={[10, 10, 10]} intensity={0.6} />
+      <pointLight position={[-5, 8, -5]} intensity={0.3} color="#22d3ee" />
       
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, (processes.length - 1) * 0.75]}>
-        <planeGeometry args={[14, processes.length * 1.5 + 2]} />
-        <meshStandardMaterial color="#1a1a2e" opacity={0.8} transparent />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, (processes.length - 1) * 0.6]}>
+        <planeGeometry args={[13, processes.length * 1.2 + 1.5]} />
+        <meshStandardMaterial color="#12121f" opacity={0.9} transparent />
       </mesh>
       
       {processes.map((process, index) => (
@@ -195,14 +152,23 @@ function Scene({
         );
       })}
       
-      {timeMarkers.map(time => (
-        <TimelineMarker 
-          key={time} 
-          time={time} 
-          totalTime={totalTime} 
-          animatedTime={animatedTime}
-        />
-      ))}
+      {timeMarkers.map(time => {
+        const xPos = (time / totalTime) * 10 - 5;
+        const isActive = animatedTime >= time;
+        return (
+          <group key={time} position={[xPos, 0.01, -0.8]}>
+            <mesh>
+              <boxGeometry args={[0.03, 0.03, 0.2]} />
+              <meshBasicMaterial color={isActive ? "#22d3ee" : "#444"} />
+            </mesh>
+            <Html position={[0, -0.2, 0]} center distanceFactor={8} style={{ pointerEvents: 'none' }}>
+              <span className={`text-[10px] font-mono ${isActive ? 'text-cyan-400' : 'text-gray-500'}`}>
+                {time}
+              </span>
+            </Html>
+          </group>
+        );
+      })}
       
       <TimeIndicator 
         animatedTime={animatedTime} 
@@ -212,10 +178,10 @@ function Scene({
       
       <OrbitControls
         enablePan={false}
-        minDistance={5}
-        maxDistance={20}
+        minDistance={4}
+        maxDistance={18}
         minPolarAngle={Math.PI / 6}
-        maxPolarAngle={Math.PI / 2.5}
+        maxPolarAngle={Math.PI / 2.2}
         autoRotate={false}
       />
     </>
@@ -229,12 +195,20 @@ interface GanttChart3DProps {
 }
 
 export function GanttChart3D({ ganttChart, processes, animatedTime }: GanttChart3DProps) {
+  if (!ganttChart.length || !processes.length) {
+    return (
+      <div className="w-full h-[350px] rounded-xl bg-[#0a0a15] flex items-center justify-center text-gray-500">
+        No data to display
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-[350px] rounded-xl overflow-hidden bg-[#0a0a15]">
       <Canvas
         camera={{ 
-          position: [0, 8, 10], 
-          fov: 45,
+          position: [0, 6, 8], 
+          fov: 50,
           near: 0.1,
           far: 100
         }}
