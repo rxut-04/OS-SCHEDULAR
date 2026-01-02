@@ -30,7 +30,7 @@ function AnimatedBlock({ block, process, totalTime, rowIndex, isVisible, isBeing
       const startTime = Date.now();
       const animate = () => {
         const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / 800, 1);
+        const progress = Math.min(elapsed / 600, 1);
         setAnimationProgress(progress);
         if (progress < 1) {
           requestAnimationFrame(animate);
@@ -48,15 +48,18 @@ function AnimatedBlock({ block, process, totalTime, rowIndex, isVisible, isBeing
 
   if (!isVisible && !isBeingPlaced) return null;
   
-  const easeOutBack = (t: number) => {
-    const c1 = 1.70158;
-    const c3 = c1 + 1;
-    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+  const easeOutBounce = (t: number) => {
+    const n1 = 7.5625;
+    const d1 = 2.75;
+    if (t < 1 / d1) return n1 * t * t;
+    if (t < 2 / d1) return n1 * (t -= 1.5 / d1) * t + 0.75;
+    if (t < 2.5 / d1) return n1 * (t -= 2.25 / d1) * t + 0.9375;
+    return n1 * (t -= 2.625 / d1) * t + 0.984375;
   };
   
-  const currentY = isBeingPlaced ? 5 - easeOutBack(animationProgress) * 4.25 : 0.75;
-  const currentScale = isBeingPlaced ? 0.5 + easeOutBack(animationProgress) * 0.5 : 1;
-  const currentOpacity = isBeingPlaced ? animationProgress : 1;
+  const currentY = isBeingPlaced ? 4 - easeOutBounce(animationProgress) * 3.25 : 0.75;
+  const currentScale = isBeingPlaced ? 0.6 + easeOutBounce(animationProgress) * 0.4 : 1;
+  const currentOpacity = isBeingPlaced ? 0.3 + animationProgress * 0.7 : 1;
 
   return (
     <group position={[finalXPos, currentY, zPos]} scale={[currentScale, currentScale, currentScale]}>
@@ -69,7 +72,7 @@ function AnimatedBlock({ block, process, totalTime, rowIndex, isVisible, isBeing
           metalness={0.3}
           roughness={0.4}
           emissive={process.color}
-          emissiveIntensity={0.2}
+          emissiveIntensity={isBeingPlaced ? 0.5 : 0.2}
         />
       </mesh>
       
@@ -102,14 +105,21 @@ function ProcessLabel({ process, rowIndex }: { process: Process; rowIndex: numbe
   );
 }
 
-function CameraController({ processCount }: { processCount: number }) {
+function CameraController({ processCount, characterPos }: { processCount: number; characterPos: [number, number, number] }) {
   const { camera } = useThree();
+  const targetRef = useRef(new THREE.Vector3());
   
   useEffect(() => {
     const zCenter = (processCount - 1) * 1.25;
-    camera.position.set(2, 8, zCenter + 18);
-    camera.lookAt(0, 0, zCenter);
+    camera.position.set(2, 10, zCenter + 20);
+    targetRef.current.set(0, 0, zCenter);
   }, [camera, processCount]);
+  
+  useFrame(() => {
+    const targetZ = characterPos[2];
+    targetRef.current.z += (targetZ * 0.3 - targetRef.current.z * 0.3) * 0.02;
+    camera.lookAt(targetRef.current);
+  });
   
   return null;
 }
@@ -121,7 +131,7 @@ interface CharacterControllerProps {
   isExplaining: boolean;
   totalTime: number;
   onBlockPlace: (blockIndex: number) => void;
-  onComplete: () => void;
+  onPositionChange: (pos: [number, number, number]) => void;
 }
 
 function CharacterController({
@@ -131,79 +141,111 @@ function CharacterController({
   isExplaining,
   totalTime,
   onBlockPlace,
-  onComplete
+  onPositionChange
 }: CharacterControllerProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [characterPosition, setCharacterPosition] = useState<[number, number, number]>([-13, 0, 0]);
+  const [characterPosition, setCharacterPosition] = useState<[number, number, number]>([-12, 0, 0]);
+  const [targetPosition, setTargetPosition] = useState<[number, number, number]>([-12, 0, 0]);
   const [characterAnimation, setCharacterAnimation] = useState<'idle' | 'wave' | 'point' | 'pickup' | 'place' | 'explain' | 'walk'>('idle');
   const [speechText, setSpeechText] = useState('');
   const [holdingBlock, setHoldingBlock] = useState<{ color: string; width: number } | null>(null);
+  const [waitingForWalk, setWaitingForWalk] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const placeTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   const steps = useMemo(() => 
-    generateAlgorithmSteps(ganttChart, processes, algorithm),
-    [ganttChart, processes, algorithm]
+    generateAlgorithmSteps(ganttChart, processes, algorithm, totalTime),
+    [ganttChart, processes, algorithm, totalTime]
   );
-
+  
+  const advanceStep = useCallback(() => {
+    setCurrentStepIndex(prev => {
+      if (prev < steps.length - 1) {
+        return prev + 1;
+      }
+      return prev;
+    });
+  }, [steps.length]);
+  
+  const handleReachedTarget = useCallback(() => {
+    if (waitingForWalk) {
+      setWaitingForWalk(false);
+      advanceStep();
+    }
+  }, [waitingForWalk, advanceStep]);
+  
   const processStep = useCallback((stepIndex: number) => {
     const step = steps[stepIndex];
     if (!step) return;
     
     setSpeechText(step.message);
     
+    if (step.targetPosition) {
+      setTargetPosition(step.targetPosition);
+      onPositionChange(step.targetPosition);
+    }
+    
     switch (step.type) {
       case 'intro':
         setCharacterAnimation('wave');
-        setCharacterPosition([-13, 0, (processes.length - 1) * 1.25]);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(advanceStep, step.duration);
         break;
+        
       case 'explain':
         setCharacterAnimation('explain');
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(advanceStep, step.duration);
         break;
+        
+      case 'walk_to_pickup':
+        setCharacterAnimation('walk');
+        setWaitingForWalk(true);
+        break;
+        
       case 'pickup':
         setCharacterAnimation('pickup');
         if (step.blockIndex !== undefined) {
           const block = ganttChart[step.blockIndex];
           const process = processes.find(p => p.id === block.processId);
-          const rowIndex = processes.findIndex(p => p.id === block.processId);
           if (process) {
             const width = ((block.endTime - block.startTime) / totalTime) * 16;
-            setHoldingBlock({ color: process.color, width });
-            setCharacterPosition([-13, 0, rowIndex * 2.5]);
+            setTimeout(() => {
+              setHoldingBlock({ color: process.color, width });
+            }, 500);
           }
         }
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(advanceStep, step.duration);
         break;
+        
+      case 'walk_to_place':
+        setCharacterAnimation('walk');
+        setWaitingForWalk(true);
+        break;
+        
       case 'place':
         setCharacterAnimation('place');
         if (step.blockIndex !== undefined) {
-          const block = ganttChart[step.blockIndex];
-          const xPos = ((block.startTime + block.endTime) / 2 / totalTime) * 16 - 8;
-          const rowIndex = processes.findIndex(p => p.id === block.processId);
-          setCharacterPosition([xPos - 2.5, 0, rowIndex * 2.5 + 3]);
-          
-          placeTimerRef.current = setTimeout(() => {
+          setTimeout(() => {
             setHoldingBlock(null);
             onBlockPlace(step.blockIndex!);
-          }, step.duration * 0.5);
+          }, 600);
         }
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(advanceStep, step.duration);
         break;
+        
       case 'complete':
         setCharacterAnimation('wave');
-        setCharacterPosition([-13, 0, (processes.length - 1) * 1.25]);
         setHoldingBlock(null);
-        placeTimerRef.current = setTimeout(() => onComplete(), step.duration);
         break;
     }
-  }, [steps, ganttChart, processes, totalTime, onBlockPlace, onComplete]);
+  }, [steps, ganttChart, processes, totalTime, advanceStep, onBlockPlace, onPositionChange]);
   
   useEffect(() => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
-    }
-    if (placeTimerRef.current) {
-      clearTimeout(placeTimerRef.current);
-      placeTimerRef.current = null;
     }
     
     if (!isExplaining) {
@@ -211,39 +253,42 @@ function CharacterController({
       setHoldingBlock(null);
       setSpeechText('');
       setCharacterAnimation('idle');
-      setCharacterPosition([-13, 0, (processes.length - 1) * 1.25]);
+      const centerZ = (processes.length - 1) * 1.25;
+      setCharacterPosition([-12, 0, centerZ]);
+      setTargetPosition([-12, 0, centerZ]);
+      setWaitingForWalk(false);
       return;
     }
     
     processStep(currentStepIndex);
     
-    const step = steps[currentStepIndex];
-    if (step && currentStepIndex < steps.length - 1) {
-      timerRef.current = setTimeout(() => {
-        setCurrentStepIndex(prev => prev + 1);
-      }, step.duration);
-    }
-    
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
-      if (placeTimerRef.current) {
-        clearTimeout(placeTimerRef.current);
-      }
     };
-  }, [currentStepIndex, isExplaining, steps.length, processStep, processes.length]);
+  }, [currentStepIndex, isExplaining, processStep, processes.length]);
+  
+  useEffect(() => {
+    if (isExplaining) {
+      const centerZ = (processes.length - 1) * 1.25;
+      setCharacterPosition([-12, 0, centerZ]);
+      setTargetPosition([-12, 0, centerZ]);
+    }
+  }, [isExplaining, processes.length]);
   
   return (
     <>
       <Character3D
         position={characterPosition}
+        targetPosition={targetPosition}
         animation={characterAnimation}
         holdingBlock={holdingBlock}
+        onReachedTarget={handleReachedTarget}
       />
       <SpeechBubble
         text={speechText}
-        position={[characterPosition[0] + 0.5, characterPosition[1] + 3.8, characterPosition[2]]}
+        position={targetPosition}
         visible={!!speechText && isExplaining}
       />
     </>
@@ -267,6 +312,7 @@ function SceneWithCharacter({
 }: SceneWithCharacterProps) {
   const [visibleBlocks, setVisibleBlocks] = useState<Set<number>>(new Set());
   const [placingBlock, setPlacingBlock] = useState<number | null>(null);
+  const [characterPos, setCharacterPos] = useState<[number, number, number]>([-12, 0, 0]);
   
   const totalTime = ganttChart.length > 0 ? ganttChart[ganttChart.length - 1].endTime : 1;
   const zCenter = (processes.length - 1) * 1.25;
@@ -287,10 +333,11 @@ function SceneWithCharacter({
     setTimeout(() => {
       setVisibleBlocks(prev => new Set([...prev, blockIndex]));
       setPlacingBlock(null);
-    }, 800);
+    }, 600);
   }, []);
   
-  const handleComplete = useCallback(() => {
+  const handlePositionChange = useCallback((pos: [number, number, number]) => {
+    setCharacterPos(pos);
   }, []);
   
   const timeMarkers = useMemo(() => {
@@ -304,22 +351,29 @@ function SceneWithCharacter({
 
   return (
     <>
-      <CameraController processCount={processes.length} />
+      <CameraController processCount={processes.length} characterPos={characterPos} />
       
-      <ambientLight intensity={0.6} />
-      <pointLight position={[10, 20, 15]} intensity={1.2} />
-      <pointLight position={[-10, 15, -10]} intensity={0.6} color="#22d3ee" />
-      <spotLight position={[0, 25, zCenter]} angle={0.4} penumbra={1} intensity={0.8} />
-      <pointLight position={[-15, 5, zCenter]} intensity={0.4} color="#FFB6C1" />
+      <ambientLight intensity={0.5} />
+      <pointLight position={[10, 25, 15]} intensity={1.5} castShadow />
+      <pointLight position={[-15, 20, -10]} intensity={0.8} color="#22d3ee" />
+      <spotLight position={[0, 30, zCenter]} angle={0.5} penumbra={1} intensity={1} color="#fff5f5" />
+      <pointLight position={[-18, 8, zCenter]} intensity={0.6} color="#FF69B4" />
       
-      <Stars radius={150} depth={60} count={3000} factor={5} saturation={0} fade speed={0.5} />
+      <Stars radius={200} depth={80} count={4000} factor={6} saturation={0} fade speed={0.3} />
       
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, zCenter]}>
-        <planeGeometry args={[28, processes.length * 2.5 + 6]} />
-        <meshStandardMaterial color="#0a0a18" opacity={0.98} transparent />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, zCenter]} receiveShadow>
+        <planeGeometry args={[32, processes.length * 2.5 + 10]} />
+        <meshStandardMaterial color="#0a0a1a" opacity={0.98} transparent />
       </mesh>
       
-      <gridHelper args={[28, 28, '#1a1a30', '#151525']} position={[0, 0.01, zCenter]} />
+      <gridHelper args={[32, 32, '#1e1e3a', '#161628']} position={[0, 0.01, zCenter]} />
+      
+      {[-14, 10].map((x, i) => (
+        <mesh key={i} position={[x, 0.02, zCenter]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[0.1, processes.length * 2.5 + 8]} />
+          <meshBasicMaterial color="#22d3ee" opacity={0.3} transparent />
+        </mesh>
+      ))}
       
       {processes.map((process, index) => (
         <ProcessLabel key={process.id} process={process} rowIndex={index} />
@@ -349,12 +403,12 @@ function SceneWithCharacter({
       {timeMarkers.map(time => {
         const xPos = (time / totalTime) * 16 - 8;
         return (
-          <group key={time} position={[xPos, 0.02, -1.8]}>
+          <group key={time} position={[xPos, 0.02, -2]}>
             <mesh>
-              <boxGeometry args={[0.06, 0.06, 0.5]} />
+              <boxGeometry args={[0.08, 0.08, 0.6]} />
               <meshBasicMaterial color="#22d3ee" />
             </mesh>
-            <Html position={[0, -0.4, 0]} center distanceFactor={15} style={{ pointerEvents: 'none' }}>
+            <Html position={[0, -0.5, 0]} center distanceFactor={15} style={{ pointerEvents: 'none' }}>
               <span className="text-sm font-mono font-bold text-cyan-400">
                 {time}
               </span>
@@ -370,19 +424,19 @@ function SceneWithCharacter({
         isExplaining={isExplaining}
         totalTime={totalTime}
         onBlockPlace={handleBlockPlace}
-        onComplete={handleComplete}
+        onPositionChange={handlePositionChange}
       />
       
       <OrbitControls
         target={[0, 0, zCenter]}
         enablePan={true}
-        minDistance={8}
-        maxDistance={45}
-        minPolarAngle={0.3}
+        minDistance={10}
+        maxDistance={50}
+        minPolarAngle={0.2}
         maxPolarAngle={Math.PI / 2.1}
         autoRotate={false}
         enableDamping={true}
-        dampingFactor={0.05}
+        dampingFactor={0.08}
       />
     </>
   );
@@ -415,11 +469,12 @@ export function GanttChart3DWithCharacter({
     <div className="w-full h-full" style={{ minHeight: '100vh' }}>
       <Canvas
         camera={{ 
-          fov: 50,
+          fov: 55,
           near: 0.1,
-          far: 300
+          far: 400
         }}
         gl={{ antialias: true, alpha: true }}
+        shadows
         style={{ width: '100%', height: '100%' }}
       >
         <SceneWithCharacter
