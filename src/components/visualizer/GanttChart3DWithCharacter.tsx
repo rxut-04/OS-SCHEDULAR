@@ -1,9 +1,9 @@
 "use client";
 
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Html, Stars, Line } from '@react-three/drei';
-import * as THREE from 'three';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { Html, Stars, Line, OrbitControls } from '@react-three/drei';
+import type { Mesh } from 'three';
 import { GanttBlock, Process } from '@/lib/algorithms/types';
 import { Character3D, SpeechBubble, generateAlgorithmSteps, useVoice } from './Character3D';
 
@@ -17,7 +17,7 @@ interface AnimatedBlockProps {
 }
 
 function AnimatedBlock({ block, process, totalTime, rowIndex, isVisible, isBeingPlaced }: AnimatedBlockProps) {
-  const meshRef = useRef<THREE.Mesh>(null);
+  const meshRef = useRef<Mesh>(null);
   const [animationProgress, setAnimationProgress] = useState(0);
   
   const width = Math.max(((block.endTime - block.startTime) / totalTime) * 16, 0.5);
@@ -358,222 +358,6 @@ function CharacterController({
   );
 }
 
-function GoogleMapsCamera() {
-  const { camera, gl } = useThree();
-  const isDragging = useRef(false);
-  const isPinching = useRef(false);
-  const lastPos = useRef({ x: 0, y: 0 });
-  const lastTouchDist = useRef(0);
-  const lastTouchCenter = useRef({ x: 0, y: 0 });
-  const velocity = useRef({ x: 0, z: 0 });
-  
-  const camTarget = useRef({ x: 0, z: 5, zoom: 25 });
-  const camCurrent = useRef({ x: 0, z: 5, zoom: 25 });
-  
-  useEffect(() => {
-    const canvas = gl.domElement;
-    
-    camCurrent.current = { x: 0, z: 5, zoom: 25 };
-    camTarget.current = { x: 0, z: 5, zoom: 25 };
-    
-    const handleMouseDown = (e: MouseEvent) => {
-      isDragging.current = true;
-      lastPos.current = { x: e.clientX, y: e.clientY };
-      velocity.current = { x: 0, z: 0 };
-      canvas.style.cursor = 'grabbing';
-      e.preventDefault();
-    };
-    
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging.current) return;
-      
-      const dx = e.clientX - lastPos.current.x;
-      const dy = e.clientY - lastPos.current.y;
-      
-      const scale = camCurrent.current.zoom * 0.002;
-      
-      camTarget.current.x -= dx * scale;
-      camTarget.current.z -= dy * scale;
-      
-      velocity.current.x = -dx * scale;
-      velocity.current.z = -dy * scale;
-      
-      lastPos.current = { x: e.clientX, y: e.clientY };
-    };
-    
-    const handleMouseUp = () => {
-      isDragging.current = false;
-      canvas.style.cursor = 'grab';
-    };
-    
-    const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      const rect = canvas.getBoundingClientRect();
-      const mouseX = (e.clientX - rect.left) / rect.width * 2 - 1;
-      const mouseY = -(e.clientY - rect.top) / rect.height * 2 + 1;
-      
-      const oldZoom = camTarget.current.zoom;
-      const zoomDelta = e.deltaY > 0 ? 1.12 : 0.89;
-      const newZoom = Math.max(5, Math.min(100, oldZoom * zoomDelta));
-      
-      const worldX = camTarget.current.x + mouseX * oldZoom * 0.5;
-      const worldZ = camTarget.current.z - mouseY * oldZoom * 0.35;
-      
-      camTarget.current.x = worldX - mouseX * newZoom * 0.5;
-      camTarget.current.z = worldZ + mouseY * newZoom * 0.35;
-      camTarget.current.zoom = newZoom;
-    };
-    
-    const getTouchDist = (t: TouchList) => {
-      if (t.length < 2) return 0;
-      const dx = t[0].clientX - t[1].clientX;
-      const dy = t[0].clientY - t[1].clientY;
-      return Math.sqrt(dx * dx + dy * dy);
-    };
-    
-    const getTouchCenter = (t: TouchList) => {
-      if (t.length < 2) return { x: t[0].clientX, y: t[0].clientY };
-      return {
-        x: (t[0].clientX + t[1].clientX) / 2,
-        y: (t[0].clientY + t[1].clientY) / 2
-      };
-    };
-    
-    const handleTouchStart = (e: TouchEvent) => {
-      e.preventDefault();
-      velocity.current = { x: 0, z: 0 };
-      
-      if (e.touches.length === 1) {
-        isDragging.current = true;
-        isPinching.current = false;
-        lastPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      } else if (e.touches.length >= 2) {
-        isDragging.current = false;
-        isPinching.current = true;
-        lastTouchDist.current = getTouchDist(e.touches);
-        lastTouchCenter.current = getTouchCenter(e.touches);
-      }
-    };
-    
-    const handleTouchMove = (e: TouchEvent) => {
-      e.preventDefault();
-      
-      if (e.touches.length === 1 && isDragging.current && !isPinching.current) {
-        const dx = e.touches[0].clientX - lastPos.current.x;
-        const dy = e.touches[0].clientY - lastPos.current.y;
-        
-        const scale = camCurrent.current.zoom * 0.003;
-        
-        camTarget.current.x -= dx * scale;
-        camTarget.current.z -= dy * scale;
-        
-        velocity.current.x = -dx * scale;
-        velocity.current.z = -dy * scale;
-        
-        lastPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      } else if (e.touches.length >= 2 && isPinching.current) {
-        const newDist = getTouchDist(e.touches);
-        const newCenter = getTouchCenter(e.touches);
-        
-        const centerDx = newCenter.x - lastTouchCenter.current.x;
-        const centerDy = newCenter.y - lastTouchCenter.current.y;
-        const panScale = camCurrent.current.zoom * 0.002;
-        camTarget.current.x -= centerDx * panScale;
-        camTarget.current.z -= centerDy * panScale;
-        
-        if (lastTouchDist.current > 0 && newDist > 0) {
-          const rect = canvas.getBoundingClientRect();
-          const touchX = (newCenter.x - rect.left) / rect.width * 2 - 1;
-          const touchY = -(newCenter.y - rect.top) / rect.height * 2 + 1;
-          
-          const oldZoom = camTarget.current.zoom;
-          const pinchRatio = lastTouchDist.current / newDist;
-          const newZoom = Math.max(5, Math.min(100, oldZoom * pinchRatio));
-          
-          const worldX = camTarget.current.x + touchX * oldZoom * 0.5;
-          const worldZ = camTarget.current.z - touchY * oldZoom * 0.35;
-          
-          camTarget.current.x = worldX - touchX * newZoom * 0.5;
-          camTarget.current.z = worldZ + touchY * newZoom * 0.35;
-          camTarget.current.zoom = newZoom;
-        }
-        
-        lastTouchDist.current = newDist;
-        lastTouchCenter.current = newCenter;
-      }
-    };
-    
-    const handleTouchEnd = (e: TouchEvent) => {
-      if (e.touches.length === 0) {
-        isDragging.current = false;
-        isPinching.current = false;
-      } else if (e.touches.length === 1) {
-        isPinching.current = false;
-        isDragging.current = true;
-        lastPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        lastTouchDist.current = 0;
-      }
-    };
-    
-    canvas.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    canvas.addEventListener('wheel', handleWheel, { passive: false });
-    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
-    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
-    canvas.addEventListener('touchend', handleTouchEnd);
-    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
-    
-    canvas.style.cursor = 'grab';
-    canvas.style.touchAction = 'none';
-    
-    return () => {
-      canvas.removeEventListener('mousedown', handleMouseDown);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-      canvas.removeEventListener('wheel', handleWheel);
-      canvas.removeEventListener('touchstart', handleTouchStart);
-      canvas.removeEventListener('touchmove', handleTouchMove);
-      canvas.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [gl]);
-  
-  useFrame(() => {
-    if (!isDragging.current && !isPinching.current) {
-      velocity.current.x *= 0.92;
-      velocity.current.z *= 0.92;
-      
-      if (Math.abs(velocity.current.x) > 0.001 || Math.abs(velocity.current.z) > 0.001) {
-        camTarget.current.x += velocity.current.x * 0.5;
-        camTarget.current.z += velocity.current.z * 0.5;
-      }
-    }
-    
-    camCurrent.current.x += (camTarget.current.x - camCurrent.current.x) * 0.15;
-    camCurrent.current.z += (camTarget.current.z - camCurrent.current.z) * 0.15;
-    camCurrent.current.zoom += (camTarget.current.zoom - camCurrent.current.zoom) * 0.15;
-    
-    const height = camCurrent.current.zoom;
-    const tiltOffset = height * 0.6;
-    
-    camera.position.set(
-      camCurrent.current.x,
-      height,
-      camCurrent.current.z + tiltOffset
-    );
-    
-    camera.lookAt(
-      camCurrent.current.x,
-      0,
-      camCurrent.current.z
-    );
-  });
-  
-  return null;
-}
-
 interface SceneWithCharacterProps {
   ganttChart: GanttBlock[];
   processes: Process[];
@@ -664,20 +448,29 @@ function SceneWithCharacter({
         );
       })}
       
-      <CharacterController
-        ganttChart={ganttChart}
-        processes={processes}
-        algorithm={algorithm}
-        isExplaining={isExplaining}
-        totalTime={totalTime}
-        onBlockPlace={handleBlockPlace}
-        speak={speak}
-        stopSpeaking={stopSpeaking}
-        isSpeaking={isSpeaking}
-      />
-      
-      <GoogleMapsCamera />
-    </>
+        <CharacterController
+          ganttChart={ganttChart}
+          processes={processes}
+          algorithm={algorithm}
+          isExplaining={isExplaining}
+          totalTime={totalTime}
+          onBlockPlace={handleBlockPlace}
+          speak={speak}
+          stopSpeaking={stopSpeaking}
+          isSpeaking={isSpeaking}
+        />
+        
+        <OrbitControls
+          enablePan={true}
+          enableZoom={true}
+          enableRotate={true}
+          minDistance={5}
+          maxDistance={100}
+          minPolarAngle={0.2}
+          maxPolarAngle={Math.PI / 2.2}
+          target={[0, 0, zCenter]}
+        />
+      </>
   );
 }
 

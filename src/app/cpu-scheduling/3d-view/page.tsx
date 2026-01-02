@@ -151,8 +151,8 @@ function ThreeDViewContent() {
           ))}
         </div>
           <p className="text-center text-gray-500 text-[10px] sm:text-xs mt-1.5 sm:mt-2">
-            1-Finger/Mouse: Pan • 2-Finger/Scroll: Zoom • Explore freely like Google Maps!
-          </p>
+              Left-drag: Rotate • Right-drag: Pan • Scroll: Zoom • Touch: Pinch to zoom, drag to rotate
+            </p>
       </footer>
     </div>
   );
