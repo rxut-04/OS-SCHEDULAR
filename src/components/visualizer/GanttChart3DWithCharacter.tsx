@@ -2,10 +2,10 @@
 
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Html, Stars, Line, MapControls } from '@react-three/drei';
+import { Html, Stars, Line } from '@react-three/drei';
 import * as THREE from 'three';
 import { GanttBlock, Process } from '@/lib/algorithms/types';
-import { Character3D, SpeechBubble, generateAlgorithmSteps } from './Character3D';
+import { Character3D, SpeechBubble, generateAlgorithmSteps, useVoice } from './Character3D';
 
 interface AnimatedBlockProps {
   block: GanttBlock;
@@ -181,6 +181,9 @@ interface CharacterControllerProps {
   isExplaining: boolean;
   totalTime: number;
   onBlockPlace: (blockIndex: number) => void;
+  speak: (text: string, onEnd?: () => void) => void;
+  stopSpeaking: () => void;
+  isSpeaking: boolean;
 }
 
 function CharacterController({
@@ -189,7 +192,10 @@ function CharacterController({
   algorithm,
   isExplaining,
   totalTime,
-  onBlockPlace
+  onBlockPlace,
+  speak,
+  stopSpeaking,
+  isSpeaking
 }: CharacterControllerProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [characterPosition, setCharacterPosition] = useState<[number, number, number]>([-12, 0, 0]);
@@ -199,6 +205,7 @@ function CharacterController({
   const [holdingBlock, setHoldingBlock] = useState<{ color: string; width: number } | null>(null);
   const [waitingForWalk, setWaitingForWalk] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSpokenText = useRef<string>('');
   
   const steps = useMemo(() => 
     generateAlgorithmSteps(ganttChart, processes, algorithm, totalTime),
@@ -226,6 +233,11 @@ function CharacterController({
     if (!step) return;
     
     setSpeechText(step.message);
+    
+    if (step.message && step.message !== lastSpokenText.current) {
+      lastSpokenText.current = step.message;
+      speak(step.message);
+    }
     
     if (step.targetPosition) {
       setTargetPosition(step.targetPosition);
@@ -287,7 +299,7 @@ function CharacterController({
         setHoldingBlock(null);
         break;
     }
-  }, [steps, ganttChart, processes, totalTime, advanceStep, onBlockPlace]);
+  }, [steps, ganttChart, processes, totalTime, advanceStep, onBlockPlace, speak]);
   
   useEffect(() => {
     if (timerRef.current) {
@@ -304,6 +316,8 @@ function CharacterController({
       setCharacterPosition([-12, 0, centerZ]);
       setTargetPosition([-12, 0, centerZ]);
       setWaitingForWalk(false);
+      lastSpokenText.current = '';
+      stopSpeaking();
       return;
     }
     
@@ -314,7 +328,7 @@ function CharacterController({
         clearTimeout(timerRef.current);
       }
     };
-  }, [currentStepIndex, isExplaining, processStep, processes.length]);
+  }, [currentStepIndex, isExplaining, processStep, processes.length, stopSpeaking]);
   
   useEffect(() => {
     if (isExplaining) {
@@ -332,11 +346,13 @@ function CharacterController({
         animation={characterAnimation}
         holdingBlock={holdingBlock}
         onReachedTarget={handleReachedTarget}
+        isSpeaking={isSpeaking}
       />
       <SpeechBubble
         text={speechText}
         position={targetPosition}
         visible={!!speechText && isExplaining}
+        isSpeaking={isSpeaking}
       />
     </>
   );
@@ -566,6 +582,9 @@ interface SceneWithCharacterProps {
   algorithm: string;
   isExplaining: boolean;
   showAllBlocks: boolean;
+  speak: (text: string, onEnd?: () => void) => void;
+  stopSpeaking: () => void;
+  isSpeaking: boolean;
 }
 
 function SceneWithCharacter({
@@ -573,7 +592,10 @@ function SceneWithCharacter({
   processes,
   algorithm,
   isExplaining,
-  showAllBlocks
+  showAllBlocks,
+  speak,
+  stopSpeaking,
+  isSpeaking
 }: SceneWithCharacterProps) {
   const [visibleBlocks, setVisibleBlocks] = useState<Set<number>>(new Set());
   const [placingBlock, setPlacingBlock] = useState<number | null>(null);
@@ -651,6 +673,9 @@ function SceneWithCharacter({
         isExplaining={isExplaining}
         totalTime={totalTime}
         onBlockPlace={handleBlockPlace}
+        speak={speak}
+        stopSpeaking={stopSpeaking}
+        isSpeaking={isSpeaking}
       />
       
       <GoogleMapsCamera />
@@ -674,6 +699,21 @@ export function GanttChart3DWithCharacter({
   showAllBlocks = false
 }: GanttChart3DWithCharacterProps) {
   const zCenter = processes.length > 0 ? (processes.length - 1) * 1.25 : 0;
+  const { speak, stop, isSpeaking } = useVoice();
+  const [speaking, setSpeaking] = useState(false);
+  
+  useEffect(() => {
+    const checkSpeaking = setInterval(() => {
+      setSpeaking(isSpeaking());
+    }, 100);
+    return () => clearInterval(checkSpeaking);
+  }, [isSpeaking]);
+  
+  useEffect(() => {
+    if (!isExplaining) {
+      stop();
+    }
+  }, [isExplaining, stop]);
   
   if (!ganttChart.length || !processes.length) {
     return (
@@ -702,6 +742,9 @@ export function GanttChart3DWithCharacter({
           algorithm={algorithm}
           isExplaining={isExplaining}
           showAllBlocks={showAllBlocks}
+          speak={speak}
+          stopSpeaking={stop}
+          isSpeaking={speaking}
         />
       </Canvas>
     </div>

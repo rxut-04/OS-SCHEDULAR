@@ -1,10 +1,131 @@
 "use client";
 
-import { useRef } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { GanttBlock, Process } from '@/lib/algorithms/types';
+
+class VoiceSynthesis {
+  private static instance: VoiceSynthesis;
+  private synth: SpeechSynthesis | null = null;
+  private voice: SpeechSynthesisVoice | null = null;
+  private isReady = false;
+  private currentUtterance: SpeechSynthesisUtterance | null = null;
+
+  private constructor() {
+    if (typeof window !== 'undefined') {
+      this.synth = window.speechSynthesis;
+      this.loadVoice();
+    }
+  }
+
+  static getInstance(): VoiceSynthesis {
+    if (!VoiceSynthesis.instance) {
+      VoiceSynthesis.instance = new VoiceSynthesis();
+    }
+    return VoiceSynthesis.instance;
+  }
+
+  private loadVoice() {
+    if (!this.synth) return;
+
+    const setVoice = () => {
+      const voices = this.synth!.getVoices();
+      const femaleVoices = voices.filter(v => 
+        v.name.toLowerCase().includes('female') ||
+        v.name.toLowerCase().includes('samantha') ||
+        v.name.toLowerCase().includes('victoria') ||
+        v.name.toLowerCase().includes('karen') ||
+        v.name.toLowerCase().includes('moira') ||
+        v.name.toLowerCase().includes('tessa') ||
+        v.name.toLowerCase().includes('fiona') ||
+        v.name.toLowerCase().includes('veena') ||
+        v.name.toLowerCase().includes('zira') ||
+        v.name.toLowerCase().includes('hazel') ||
+        v.name.toLowerCase().includes('susan') ||
+        v.name.toLowerCase().includes('heera') ||
+        v.name.toLowerCase().includes('google uk english female') ||
+        v.name.toLowerCase().includes('google us english')
+      );
+      
+      const englishVoices = voices.filter(v => v.lang.startsWith('en'));
+      
+      this.voice = femaleVoices[0] || englishVoices[0] || voices[0] || null;
+      this.isReady = true;
+    };
+
+    if (this.synth.getVoices().length > 0) {
+      setVoice();
+    } else {
+      this.synth.onvoiceschanged = setVoice;
+    }
+  }
+
+  speak(text: string, onEnd?: () => void) {
+    if (!this.synth || !text) return;
+
+    this.stop();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    if (this.voice) {
+      utterance.voice = this.voice;
+    }
+    
+    utterance.rate = 1.0;
+    utterance.pitch = 1.15;
+    utterance.volume = 1.0;
+
+    utterance.onend = () => {
+      this.currentUtterance = null;
+      onEnd?.();
+    };
+
+    utterance.onerror = () => {
+      this.currentUtterance = null;
+    };
+
+    this.currentUtterance = utterance;
+    this.synth.speak(utterance);
+  }
+
+  stop() {
+    if (this.synth) {
+      this.synth.cancel();
+      this.currentUtterance = null;
+    }
+  }
+
+  isSpeaking(): boolean {
+    return this.synth?.speaking || false;
+  }
+}
+
+export function useVoice() {
+  const voiceRef = useRef<VoiceSynthesis | null>(null);
+
+  useEffect(() => {
+    voiceRef.current = VoiceSynthesis.getInstance();
+    return () => {
+      voiceRef.current?.stop();
+    };
+  }, []);
+
+  const speak = useCallback((text: string, onEnd?: () => void) => {
+    voiceRef.current?.speak(text, onEnd);
+  }, []);
+
+  const stop = useCallback(() => {
+    voiceRef.current?.stop();
+  }, []);
+
+  const isSpeaking = useCallback(() => {
+    return voiceRef.current?.isSpeaking() || false;
+  }, []);
+
+  return { speak, stop, isSpeaking };
+}
 
 interface CharacterProps {
   position: [number, number, number];
@@ -14,7 +135,7 @@ interface CharacterProps {
   onReachedTarget?: () => void;
 }
 
-function SlimFemaleModel({ animation, holdingBlock }: { animation: string; holdingBlock?: { color: string; width: number } | null }) {
+function SlimFemaleModel({ animation, holdingBlock, isSpeaking }: { animation: string; holdingBlock?: { color: string; width: number } | null; isSpeaking?: boolean }) {
   const bodyRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
   const neckRef = useRef<THREE.Group>(null);
@@ -31,6 +152,7 @@ function SlimFemaleModel({ animation, holdingBlock }: { animation: string; holdi
   const leftCalfRef = useRef<THREE.Group>(null);
   const rightCalfRef = useRef<THREE.Group>(null);
   const hairRef = useRef<THREE.Group>(null);
+  const mouthRef = useRef<THREE.Mesh>(null);
   
   useFrame((state) => {
     const t = state.clock.elapsedTime;
@@ -70,6 +192,15 @@ function SlimFemaleModel({ animation, holdingBlock }: { animation: string; holdi
       hairRef.current.rotation.x = animation === 'walk' 
         ? Math.sin(t * 8) * 0.05 
         : Math.sin(t * 0.8) * 0.015;
+    }
+    
+    if (mouthRef.current && isSpeaking) {
+      const mouthOpen = (Math.sin(t * 15) + 1) * 0.5;
+      mouthRef.current.scale.y = 0.4 + mouthOpen * 0.6;
+      mouthRef.current.scale.x = 0.9 - mouthOpen * 0.15;
+    } else if (mouthRef.current) {
+      mouthRef.current.scale.y = 0.4;
+      mouthRef.current.scale.x = 0.9;
     }
     
     let leftArmRot = 0, rightArmRot = 0;
@@ -133,7 +264,6 @@ function SlimFemaleModel({ animation, holdingBlock }: { animation: string; holdi
   const hair = '#1a0a00';
   const hairLight = '#2d1810';
   const top = '#E91E63';
-  const topDark = '#C2185B';
   const skirt = '#1a1a2e';
   const heels = '#1a1a1a';
   const lips = '#D4616A';
@@ -366,7 +496,7 @@ function SlimFemaleModel({ animation, holdingBlock }: { animation: string; holdi
               </mesh>
             ))}
             
-            <mesh position={[0, -0.035, 0.07]} scale={[0.9, 0.4, 0.35]}>
+            <mesh ref={mouthRef} position={[0, -0.035, 0.07]} scale={[0.9, 0.4, 0.35]}>
               <capsuleGeometry args={[0.008, 0.012, 8, 10]} />
               <meshStandardMaterial color={lips} />
             </mesh>
@@ -384,7 +514,11 @@ function SlimFemaleModel({ animation, holdingBlock }: { animation: string; holdi
   );
 }
 
-export function Character3D({ position, targetPosition, animation, holdingBlock, onReachedTarget }: CharacterProps) {
+interface ExtendedCharacterProps extends CharacterProps {
+  isSpeaking?: boolean;
+}
+
+export function Character3D({ position, targetPosition, animation, holdingBlock, onReachedTarget, isSpeaking }: ExtendedCharacterProps) {
   const groupRef = useRef<THREE.Group>(null);
   const currentPos = useRef(new THREE.Vector3(...position));
   const isWalking = useRef(false);
@@ -430,7 +564,7 @@ export function Character3D({ position, targetPosition, animation, holdingBlock,
   
   return (
     <group ref={groupRef} position={position} rotation={[0, Math.PI * 0.15, 0]} scale={[1.6, 1.6, 1.6]}>
-      <SlimFemaleModel animation={effectiveAnimation} holdingBlock={holdingBlock} />
+      <SlimFemaleModel animation={effectiveAnimation} holdingBlock={holdingBlock} isSpeaking={isSpeaking} />
       <pointLight position={[0, 1.8, 1.2]} intensity={0.5} color="#FFF8F0" distance={5} />
     </group>
   );
@@ -440,9 +574,10 @@ interface SpeechBubbleProps {
   text: string;
   position: [number, number, number];
   visible: boolean;
+  isSpeaking?: boolean;
 }
 
-export function SpeechBubble({ text, position, visible }: SpeechBubbleProps) {
+export function SpeechBubble({ text, position, visible, isSpeaking }: SpeechBubbleProps) {
   if (!visible || !text) return null;
   
   return (
@@ -462,6 +597,15 @@ export function SpeechBubble({ text, position, visible }: SpeechBubbleProps) {
             boxShadow: '0 10px 40px rgba(233, 30, 99, 0.3), 0 0 20px rgba(255, 255, 255, 0.5)'
           }}
         >
+          <div className="flex items-center gap-2 mb-1">
+            {isSpeaking && (
+              <div className="flex items-center gap-1">
+                <div className="w-1.5 h-3 bg-pink-500 rounded-full animate-pulse" style={{ animationDelay: '0ms' }} />
+                <div className="w-1.5 h-4 bg-pink-400 rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
+                <div className="w-1.5 h-2.5 bg-pink-500 rounded-full animate-pulse" style={{ animationDelay: '300ms' }} />
+              </div>
+            )}
+          </div>
           <p className="text-gray-800 text-sm font-medium leading-relaxed text-center">{text}</p>
         </div>
         <div 
@@ -502,7 +646,7 @@ export function generateAlgorithmSteps(
     type: 'intro',
     message: `Hello! I'm your AI guide. Let me explain how ${algorithm} scheduling works!`,
     targetPosition: [startX, 0, centerZ],
-    duration: 3500
+    duration: 4000
   });
   
   const explanations: Record<string, string> = {
@@ -522,14 +666,14 @@ export function generateAlgorithmSteps(
     type: 'explain',
     message: explanations[algorithm] || explanations['default'],
     targetPosition: [startX, 0, centerZ],
-    duration: 5000
+    duration: 6000
   });
   
   steps.push({
     type: 'explain',
     message: "Now watch me walk through the graph and place each process block on the timeline!",
     targetPosition: [startX, 0, centerZ],
-    duration: 3000
+    duration: 4000
   });
   
   ganttChart.forEach((block, index) => {
@@ -555,12 +699,12 @@ export function generateAlgorithmSteps(
       blockIndex: index,
       processId: block.processId,
       targetPosition: [-11, 0, pickupZ],
-      duration: 1500
+      duration: 2000
     });
     
     steps.push({
       type: 'walk_to_place',
-      message: `Carrying ${block.processId} to timeline position ${block.startTime}-${block.endTime}...`,
+      message: `Carrying ${block.processId} to timeline position ${block.startTime} to ${block.endTime}...`,
       blockIndex: index,
       processId: block.processId,
       targetPosition: [blockX, 0, pickupZ + 3],
@@ -573,7 +717,7 @@ export function generateAlgorithmSteps(
       blockIndex: index,
       processId: block.processId,
       targetPosition: [blockX, 0, pickupZ + 3],
-      duration: 1500
+      duration: 2000
     });
   });
   
@@ -595,14 +739,14 @@ export function generateAlgorithmSteps(
   const avgTurn = validCount > 0 ? totalTurnaround / validCount : 0;
   
   const message = avgWait > 0 || avgTurn > 0
-    ? `All done! Avg Wait: ${avgWait.toFixed(1)} | Avg Turnaround: ${avgTurn.toFixed(1)}. Great job learning ${algorithm}!`
+    ? `All done! Average Wait: ${avgWait.toFixed(1)} units. Average Turnaround: ${avgTurn.toFixed(1)} units. Great job learning ${algorithm}!`
     : `All done! I've placed all ${ganttChart.length} blocks. Great job learning ${algorithm}!`;
   
   steps.push({
     type: 'complete',
     message,
     targetPosition: [startX, 0, centerZ],
-    duration: 5000
+    duration: 6000
   });
   
   return steps;
