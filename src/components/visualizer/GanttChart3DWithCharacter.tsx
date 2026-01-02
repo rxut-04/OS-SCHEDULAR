@@ -2,10 +2,10 @@
 
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Html, Stars } from '@react-three/drei';
+import { OrbitControls, Html, Stars, Line, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { GanttBlock, Process } from '@/lib/algorithms/types';
-import { Character3D, SpeechBubble, generateAlgorithmSteps, AlgorithmStep } from './Character3D';
+import { Character3D, SpeechBubble, generateAlgorithmSteps } from './Character3D';
 
 interface AnimatedBlockProps {
   block: GanttBlock;
@@ -105,13 +105,83 @@ function ProcessLabel({ process, rowIndex }: { process: Process; rowIndex: numbe
   );
 }
 
+function AxisSystem({ totalTime, processCount }: { totalTime: number; processCount: number }) {
+  const xAxisLength = 18;
+  const yAxisLength = processCount * 2.5 + 2;
+  
+  const timeMarkers = useMemo(() => {
+    const markers = [];
+    const step = totalTime > 20 ? Math.ceil(totalTime / 10) : totalTime > 10 ? 2 : 1;
+    for (let i = 0; i <= totalTime; i += step) {
+      markers.push(i);
+    }
+    return markers;
+  }, [totalTime]);
+  
+  return (
+    <group>
+      <Line
+        points={[[-8, 0.05, -1.5], [10, 0.05, -1.5]]}
+        color="#00ffff"
+        lineWidth={3}
+      />
+      <mesh position={[10.3, 0.05, -1.5]} rotation={[0, 0, -Math.PI / 2]}>
+        <coneGeometry args={[0.15, 0.4, 8]} />
+        <meshBasicMaterial color="#00ffff" />
+      </mesh>
+      <Html position={[11.5, 0.3, -1.5]} center style={{ pointerEvents: 'none' }}>
+        <span className="text-cyan-400 font-bold text-lg">Time (X)</span>
+      </Html>
+      
+      <Line
+        points={[[-8.5, 0.05, -1.5], [-8.5, 0.05, yAxisLength - 1]]}
+        color="#ff69b4"
+        lineWidth={3}
+      />
+      <mesh position={[-8.5, 0.05, yAxisLength - 0.5]} rotation={[Math.PI / 2, 0, 0]}>
+        <coneGeometry args={[0.15, 0.4, 8]} />
+        <meshBasicMaterial color="#ff69b4" />
+      </mesh>
+      <Html position={[-8.5, 0.8, yAxisLength]} center style={{ pointerEvents: 'none' }}>
+        <span className="text-pink-400 font-bold text-lg">Process (Y)</span>
+      </Html>
+      
+      {timeMarkers.map(time => {
+        const xPos = (time / totalTime) * 16 - 8;
+        return (
+          <group key={`time-${time}`}>
+            <Line
+              points={[[xPos, 0.05, -1.5], [xPos, 0.05, -1.8]]}
+              color="#00ffff"
+              lineWidth={2}
+            />
+            <Html position={[xPos, 0, -2.3]} center distanceFactor={15} style={{ pointerEvents: 'none' }}>
+              <span className="text-sm font-mono font-bold text-cyan-400 bg-black/50 px-1.5 py-0.5 rounded">
+                {time}
+              </span>
+            </Html>
+          </group>
+        );
+      })}
+      
+      <mesh position={[-8, 0.02, -1.5]}>
+        <sphereGeometry args={[0.12, 16, 16]} />
+        <meshBasicMaterial color="#ffffff" />
+      </mesh>
+      <Html position={[-8.8, 0, -2]} center style={{ pointerEvents: 'none' }}>
+        <span className="text-white font-bold text-sm bg-black/50 px-1.5 py-0.5 rounded">0</span>
+      </Html>
+    </group>
+  );
+}
+
 function CameraController({ processCount, characterPos }: { processCount: number; characterPos: [number, number, number] }) {
   const { camera } = useThree();
   const targetRef = useRef(new THREE.Vector3());
   
   useEffect(() => {
     const zCenter = (processCount - 1) * 1.25;
-    camera.position.set(2, 10, zCenter + 20);
+    camera.position.set(2, 12, zCenter + 22);
     targetRef.current.set(0, 0, zCenter);
   }, [camera, processCount]);
   
@@ -339,15 +409,6 @@ function SceneWithCharacter({
   const handlePositionChange = useCallback((pos: [number, number, number]) => {
     setCharacterPos(pos);
   }, []);
-  
-  const timeMarkers = useMemo(() => {
-    const markers = [];
-    const step = totalTime > 20 ? Math.ceil(totalTime / 10) : totalTime > 10 ? 2 : 1;
-    for (let i = 0; i <= totalTime; i += step) {
-      markers.push(i);
-    }
-    return markers;
-  }, [totalTime]);
 
   return (
     <>
@@ -368,12 +429,7 @@ function SceneWithCharacter({
       
       <gridHelper args={[32, 32, '#1e1e3a', '#161628']} position={[0, 0.01, zCenter]} />
       
-      {[-14, 10].map((x, i) => (
-        <mesh key={i} position={[x, 0.02, zCenter]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[0.1, processes.length * 2.5 + 8]} />
-          <meshBasicMaterial color="#22d3ee" opacity={0.3} transparent />
-        </mesh>
-      ))}
+      <AxisSystem totalTime={totalTime} processCount={processes.length} />
       
       {processes.map((process, index) => (
         <ProcessLabel key={process.id} process={process} rowIndex={index} />
@@ -397,23 +453,6 @@ function SceneWithCharacter({
             isVisible={isVisible}
             isBeingPlaced={isBeingPlaced}
           />
-        );
-      })}
-      
-      {timeMarkers.map(time => {
-        const xPos = (time / totalTime) * 16 - 8;
-        return (
-          <group key={time} position={[xPos, 0.02, -2]}>
-            <mesh>
-              <boxGeometry args={[0.08, 0.08, 0.6]} />
-              <meshBasicMaterial color="#22d3ee" />
-            </mesh>
-            <Html position={[0, -0.5, 0]} center distanceFactor={15} style={{ pointerEvents: 'none' }}>
-              <span className="text-sm font-mono font-bold text-cyan-400">
-                {time}
-              </span>
-            </Html>
-          </group>
         );
       })}
       

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo } from 'react';
+import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
@@ -452,6 +452,7 @@ export function Character3D({ position, targetPosition, animation, holdingBlock,
   const groupRef = useRef<THREE.Group>(null);
   const currentPos = useRef(new THREE.Vector3(...position));
   const isWalking = useRef(false);
+  const currentRotation = useRef(0);
   
   useFrame((_, delta) => {
     if (!groupRef.current) return;
@@ -467,14 +468,23 @@ export function Character3D({ position, targetPosition, animation, holdingBlock,
       const movement = direction.multiplyScalar(Math.min(speed * delta, distance));
       current.add(movement);
       
-      const angle = Math.atan2(direction.x, direction.z);
-      groupRef.current.rotation.y = angle + Math.PI;
+      const targetAngle = Math.atan2(-direction.x, -direction.z);
+      let angleDiff = targetAngle - currentRotation.current;
+      while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+      while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+      currentRotation.current += angleDiff * 0.1;
+      groupRef.current.rotation.y = currentRotation.current;
     } else {
       if (isWalking.current) {
         isWalking.current = false;
         onReachedTarget?.();
       }
-      groupRef.current.rotation.y = Math.PI;
+      const targetAngle = 0;
+      let angleDiff = targetAngle - currentRotation.current;
+      while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+      while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+      currentRotation.current += angleDiff * 0.05;
+      groupRef.current.rotation.y = currentRotation.current;
     }
     
     groupRef.current.position.copy(current);
@@ -501,7 +511,7 @@ export function SpeechBubble({ text, position, visible }: SpeechBubbleProps) {
   
   return (
     <Html 
-      position={[position[0], position[1] + 4.2, position[2] - 1]} 
+      position={[position[0], position[1] + 4.5, position[2]]} 
       center 
       distanceFactor={10}
       style={{ pointerEvents: 'none' }}
@@ -512,7 +522,7 @@ export function SpeechBubble({ text, position, visible }: SpeechBubbleProps) {
           className="bg-gradient-to-br from-white via-white to-pink-50 backdrop-blur-lg rounded-2xl px-6 py-4 shadow-2xl border-2 border-pink-300/50"
           style={{ 
             minWidth: '320px',
-            maxWidth: '420px',
+            maxWidth: '450px',
             boxShadow: '0 10px 40px rgba(236, 72, 153, 0.3), 0 0 20px rgba(255, 255, 255, 0.5)'
           }}
         >

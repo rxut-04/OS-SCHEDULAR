@@ -15,7 +15,7 @@ const GanttChart3DWithCharacter = dynamic(
 function ThreeDViewContent() {
   const searchParams = useSearchParams();
   const [isExplaining, setIsExplaining] = useState(false);
-  const [showAllBlocks, setShowAllBlocks] = useState(true);
+  const [showAllBlocks, setShowAllBlocks] = useState(false);
 
   const data = useMemo(() => {
     const dataParam = searchParams.get('data');
