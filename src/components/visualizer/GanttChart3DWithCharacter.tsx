@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo, useState, useEffect } from 'react';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Html, Stars } from '@react-three/drei';
 import * as THREE from 'three';
@@ -105,7 +105,7 @@ function ProcessLabel({ process, rowIndex }: { process: Process; rowIndex: numbe
 function CameraController({ processCount }: { processCount: number }) {
   const { camera } = useThree();
   
-  useMemo(() => {
+  useEffect(() => {
     const zCenter = (processCount - 1) * 1.25;
     camera.position.set(2, 8, zCenter + 18);
     camera.lookAt(0, 0, zCenter);
@@ -138,23 +138,16 @@ function CharacterController({
   const [characterAnimation, setCharacterAnimation] = useState<'idle' | 'wave' | 'point' | 'pickup' | 'place' | 'explain' | 'walk'>('idle');
   const [speechText, setSpeechText] = useState('');
   const [holdingBlock, setHoldingBlock] = useState<{ color: string; width: number } | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const placeTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   const steps = useMemo(() => 
     generateAlgorithmSteps(ganttChart, processes, algorithm),
     [ganttChart, processes, algorithm]
   );
-  
-  useEffect(() => {
-    if (!isExplaining) {
-      setCurrentStepIndex(0);
-      setHoldingBlock(null);
-      setSpeechText('');
-      setCharacterAnimation('idle');
-      setCharacterPosition([-13, 0, (processes.length - 1) * 1.25]);
-      return;
-    }
-    
-    const step = steps[currentStepIndex];
+
+  const processStep = useCallback((stepIndex: number) => {
+    const step = steps[stepIndex];
     if (!step) return;
     
     setSpeechText(step.message);
@@ -188,7 +181,7 @@ function CharacterController({
           const rowIndex = processes.findIndex(p => p.id === block.processId);
           setCharacterPosition([xPos - 2.5, 0, rowIndex * 2.5 + 3]);
           
-          setTimeout(() => {
+          placeTimerRef.current = setTimeout(() => {
             setHoldingBlock(null);
             onBlockPlace(step.blockIndex!);
           }, step.duration * 0.5);
@@ -198,18 +191,48 @@ function CharacterController({
         setCharacterAnimation('wave');
         setCharacterPosition([-13, 0, (processes.length - 1) * 1.25]);
         setHoldingBlock(null);
-        setTimeout(() => onComplete(), step.duration);
+        placeTimerRef.current = setTimeout(() => onComplete(), step.duration);
         break;
     }
+  }, [steps, ganttChart, processes, totalTime, onBlockPlace, onComplete]);
+  
+  useEffect(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    if (placeTimerRef.current) {
+      clearTimeout(placeTimerRef.current);
+      placeTimerRef.current = null;
+    }
     
-    const timer = setTimeout(() => {
-      if (currentStepIndex < steps.length - 1) {
+    if (!isExplaining) {
+      setCurrentStepIndex(0);
+      setHoldingBlock(null);
+      setSpeechText('');
+      setCharacterAnimation('idle');
+      setCharacterPosition([-13, 0, (processes.length - 1) * 1.25]);
+      return;
+    }
+    
+    processStep(currentStepIndex);
+    
+    const step = steps[currentStepIndex];
+    if (step && currentStepIndex < steps.length - 1) {
+      timerRef.current = setTimeout(() => {
         setCurrentStepIndex(prev => prev + 1);
-      }
-    }, step.duration);
+      }, step.duration);
+    }
     
-    return () => clearTimeout(timer);
-  }, [currentStepIndex, isExplaining, steps, ganttChart, processes, totalTime, onBlockPlace, onComplete]);
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+      if (placeTimerRef.current) {
+        clearTimeout(placeTimerRef.current);
+      }
+    };
+  }, [currentStepIndex, isExplaining, steps.length, processStep, processes.length]);
   
   return (
     <>
@@ -220,7 +243,7 @@ function CharacterController({
       />
       <SpeechBubble
         text={speechText}
-        position={[characterPosition[0] + 0.5, characterPosition[1] + 3.2, characterPosition[2]]}
+        position={[characterPosition[0] + 0.5, characterPosition[1] + 3.8, characterPosition[2]]}
         visible={!!speechText && isExplaining}
       />
     </>
@@ -244,7 +267,6 @@ function SceneWithCharacter({
 }: SceneWithCharacterProps) {
   const [visibleBlocks, setVisibleBlocks] = useState<Set<number>>(new Set());
   const [placingBlock, setPlacingBlock] = useState<number | null>(null);
-  const [isComplete, setIsComplete] = useState(false);
   
   const totalTime = ganttChart.length > 0 ? ganttChart[ganttChart.length - 1].endTime : 1;
   const zCenter = (processes.length - 1) * 1.25;
@@ -257,21 +279,19 @@ function SceneWithCharacter({
         setVisibleBlocks(new Set());
       }
       setPlacingBlock(null);
-      setIsComplete(false);
     }
   }, [isExplaining, showAllBlocks, ganttChart]);
   
-  const handleBlockPlace = (blockIndex: number) => {
+  const handleBlockPlace = useCallback((blockIndex: number) => {
     setPlacingBlock(blockIndex);
     setTimeout(() => {
       setVisibleBlocks(prev => new Set([...prev, blockIndex]));
       setPlacingBlock(null);
     }, 800);
-  };
+  }, []);
   
-  const handleComplete = () => {
-    setIsComplete(true);
-  };
+  const handleComplete = useCallback(() => {
+  }, []);
   
   const timeMarkers = useMemo(() => {
     const markers = [];
