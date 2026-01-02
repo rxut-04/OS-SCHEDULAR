@@ -9,6 +9,7 @@ import { GanttChart } from '@/components/visualizer/GanttChart';
 import { StepExplanation } from '@/components/visualizer/StepExplanation';
 import { ResultsTable } from '@/components/visualizer/ResultsTable';
 import { ControlPanel } from '@/components/visualizer/ControlPanel';
+import { ComparisonChart } from '@/components/visualizer/ComparisonChart';
 
 const ALGORITHMS = [
   { id: 'fcfs', name: 'FCFS', fullName: 'First Come First Serve', description: 'Processes are executed in the order they arrive' },
@@ -25,13 +26,15 @@ export default function CpuSchedulingPage() {
   const [currentStep, setCurrentStep] = useState(-1);
   const [speed, setSpeed] = useState(1);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [timeQuantum, setTimeQuantum] = useState(2);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  const runAlgorithm = useCallback((processes: Process[], timeQuantum?: number) => {
+  const runAlgorithm = useCallback((processes: Process[], tq?: number) => {
     setInputProcesses(processes);
+    if (tq) setTimeQuantum(tq);
     let schedulingResult: SchedulingResult;
 
     switch (selectedAlgorithm) {
@@ -42,7 +45,7 @@ export default function CpuSchedulingPage() {
         schedulingResult = sjf(processes);
         break;
       case 'round-robin':
-        schedulingResult = roundRobin(processes, timeQuantum || 2);
+        schedulingResult = roundRobin(processes, tq || 2);
         break;
       case 'priority':
         schedulingResult = priorityScheduling(processes);
@@ -198,6 +201,11 @@ export default function CpuSchedulingPage() {
                   speed={speed}
                   onStepChange={handleStepChange}
                   currentStep={currentStep}
+                />
+
+                <ComparisonChart 
+                  processes={inputProcesses}
+                  timeQuantum={timeQuantum}
                 />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

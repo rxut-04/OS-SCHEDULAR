@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { GanttBlock, ExecutionStep, Process } from '@/lib/algorithms/types';
 
 interface GanttChartProps {
@@ -22,8 +22,6 @@ export function GanttChart({
   onStepChange,
   currentStep 
 }: GanttChartProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const timeScale = 60;
 
   useEffect(() => {
     if (!isPlaying) return;
@@ -35,125 +33,164 @@ export function GanttChart({
     return () => clearInterval(interval);
   }, [isPlaying, currentStep, speed, onStepChange]);
 
-  const { animatedBlocks, currentExecutingBlock } = useMemo(() => {
+  const { animatedTime, currentProcessId } = useMemo(() => {
     if (currentStep < 0) {
-      return { animatedBlocks: new Set<number>(), currentExecutingBlock: -1 };
+      return { animatedTime: -1, currentProcessId: null };
     }
 
-    const animated = new Set<number>();
-    let executing = -1;
+    const stepData = steps[currentStep];
+    if (!stepData) return { animatedTime: -1, currentProcessId: null };
 
-    for (let i = 0; i <= currentStep; i++) {
-      const stepData = steps[i];
-      if (!stepData) continue;
-
-      const blockIndex = ganttChart.findIndex(
-        block => block.startTime === stepData.time || 
-                 (stepData.action.includes('Completed') && block.endTime === stepData.time)
-      );
-
-      if (stepData.action.includes('Execute') && blockIndex >= 0) {
-        animated.add(blockIndex);
-        executing = blockIndex;
-      } else if (stepData.action.includes('Completed')) {
-        executing = -1;
-      }
+    let processId: string | null = null;
+    if (stepData.action.includes('Execute')) {
+      processId = stepData.processId;
     }
 
-    const lastStep = steps[currentStep];
-    if (lastStep && !lastStep.action.includes('Execute')) {
-      executing = -1;
-    }
+    return { animatedTime: stepData.time, currentProcessId: processId };
+  }, [currentStep, steps]);
 
-    return { animatedBlocks: animated, currentExecutingBlock: executing };
-  }, [currentStep, steps, ganttChart]);
+  const totalTime = ganttChart.length > 0 ? ganttChart[ganttChart.length - 1].endTime : 0;
 
-  const getProcessColor = (processId: string) => {
-    const process = processes.find(p => p.id === processId);
-    return process?.color || '#6366f1';
-  };
+  const timeMarkers = [];
+  for (let i = 0; i <= totalTime; i++) {
+    timeMarkers.push(i);
+  }
 
   return (
     <div className="glass-effect rounded-xl p-6 animate-fade-in">
-      <h3 className="text-lg font-semibold mb-4 text-[var(--text-primary)]">
-        Gantt Chart
+      <h3 className="text-lg font-semibold mb-6 text-[var(--text-primary)] flex items-center gap-2">
+        <svg className="w-5 h-5 text-[var(--accent-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+        </svg>
+        Execution Timeline
       </h3>
       
-      <div 
-        ref={containerRef}
-        className="overflow-x-auto pb-4"
-      >
-        <div className="relative min-w-max">
-          <div className="flex items-end gap-0.5 h-16 mb-2">
-            {ganttChart.map((block, index) => {
-              const width = (block.endTime - block.startTime) * timeScale;
-              const isAnimated = animatedBlocks.has(index);
-              const isExecuting = currentExecutingBlock === index;
-              
-              return (
+      <div className="overflow-x-auto pb-4">
+        <div className="min-w-max">
+          {processes.map((process) => {
+            const processBlocks = ganttChart.filter(b => b.processId === process.id);
+            
+            return (
+              <div key={process.id} className="flex items-center mb-3 group">
+                <div 
+                  className="w-16 flex-shrink-0 flex items-center gap-2 pr-3"
+                >
+                  <div 
+                    className="w-3 h-3 rounded-full flex-shrink-0 transition-transform group-hover:scale-125"
+                    style={{ backgroundColor: process.color }}
+                  />
+                  <span 
+                    className="font-mono font-semibold text-sm"
+                    style={{ color: process.color }}
+                  >
+                    {process.id}
+                  </span>
+                </div>
+                
+                <div className="flex-1 relative h-10 bg-[var(--bg-tertiary)] rounded-lg overflow-hidden">
+                  <div 
+                    className="absolute inset-0 opacity-20"
+                    style={{
+                      backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 39px, var(--border-color) 39px, var(--border-color) 40px)`,
+                    }}
+                  />
+                  
+                  {processBlocks.map((block, bIndex) => {
+                    const left = (block.startTime / totalTime) * 100;
+                    const width = ((block.endTime - block.startTime) / totalTime) * 100;
+                    const isActive = animatedTime >= block.startTime && animatedTime < block.endTime;
+                    const isPast = animatedTime >= block.endTime;
+                    const isCurrent = currentProcessId === process.id && isActive;
+                    
+                    return (
+                      <div
+                        key={bIndex}
+                        className={`
+                          absolute top-1 bottom-1 rounded-md flex items-center justify-center
+                          transition-all duration-300 ease-out
+                          ${(isPast || isActive) ? 'opacity-100' : 'opacity-20'}
+                          ${isCurrent ? 'ring-2 ring-white ring-offset-1 ring-offset-[var(--bg-tertiary)]' : ''}
+                        `}
+                        style={{
+                          left: `${left}%`,
+                          width: `${width}%`,
+                          backgroundColor: process.color,
+                          boxShadow: isCurrent ? `0 0 20px ${process.color}` : 'none',
+                          transform: isCurrent ? 'scale(1.05)' : 'scale(1)',
+                        }}
+                      >
+                        <span className="text-white text-xs font-bold drop-shadow-md">
+                          {block.endTime - block.startTime}
+                        </span>
+                        {isCurrent && (
+                          <div className="absolute -right-1 -top-1 w-3 h-3 bg-white rounded-full animate-ping" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+
+          <div className="flex items-center mt-4">
+            <div className="w-16 flex-shrink-0" />
+            <div className="flex-1 relative h-6">
+              <div className="absolute inset-x-0 top-0 h-px bg-[var(--border-color)]" />
+              {timeMarkers.map(time => (
                 <div
-                  key={index}
-                  className={`
-                    relative h-full rounded-md flex items-center justify-center
-                    transition-all duration-500 ease-out
-                    ${isAnimated ? 'opacity-100' : 'opacity-20'}
-                    ${isExecuting ? 'animate-pulse-glow scale-105' : ''}
-                  `}
-                  style={{
-                    width: `${width}px`,
-                    backgroundColor: isAnimated ? getProcessColor(block.processId) : 'var(--bg-tertiary)',
-                    minWidth: '40px',
-                    transform: isAnimated ? 'scaleY(1)' : 'scaleY(0.7)',
-                    boxShadow: isExecuting ? `0 0 20px ${getProcessColor(block.processId)}` : 'none',
+                  key={time}
+                  className="absolute top-0 flex flex-col items-center"
+                  style={{ left: `${(time / totalTime) * 100}%` }}
+                >
+                  <div 
+                    className={`w-px h-2 ${animatedTime >= time ? 'bg-[var(--accent-primary)]' : 'bg-[var(--border-color)]'}`}
+                  />
+                  <span 
+                    className={`text-xs font-mono mt-1 transition-colors ${
+                      animatedTime >= time ? 'text-[var(--accent-primary)]' : 'text-[var(--text-muted)]'
+                    }`}
+                  >
+                    {time}
+                  </span>
+                </div>
+              ))}
+              
+              {animatedTime >= 0 && (
+                <div
+                  className="absolute top-0 w-0.5 h-full bg-[var(--accent-primary)] transition-all duration-300"
+                  style={{ 
+                    left: `${(animatedTime / totalTime) * 100}%`,
+                    boxShadow: '0 0 10px var(--accent-primary)'
                   }}
                 >
-                  <span className="text-white font-mono text-sm font-semibold drop-shadow-lg">
-                    {block.processId}
-                  </span>
-                  {isExecuting && (
-                    <div 
-                      className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-white animate-ping"
-                    />
-                  )}
+                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-[var(--accent-primary)] rounded-full" />
                 </div>
-              );
-            })}
-          </div>
-
-          <div className="flex items-start gap-0.5">
-            {ganttChart.map((block, index) => {
-              const width = (block.endTime - block.startTime) * timeScale;
-              return (
-                <div
-                  key={index}
-                  className="flex justify-between text-xs font-mono text-[var(--text-muted)]"
-                  style={{ width: `${width}px`, minWidth: '40px' }}
-                >
-                  <span>{block.startTime}</span>
-                  {index === ganttChart.length - 1 && (
-                    <span>{block.endTime}</span>
-                  )}
-                </div>
-              );
-            })}
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-[var(--border-color)]">
+      <div className="flex flex-wrap gap-4 mt-6 pt-4 border-t border-[var(--border-color)]">
         {processes.map(process => (
           <div 
             key={process.id}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm"
-            style={{ backgroundColor: `${process.color}20` }}
+            className="flex items-center gap-3 px-4 py-2 rounded-lg transition-all hover:scale-105"
+            style={{ backgroundColor: `${process.color}15` }}
           >
             <div 
-              className="w-3 h-3 rounded-full"
+              className="w-4 h-4 rounded-full"
               style={{ backgroundColor: process.color }}
             />
-            <span className="font-mono font-medium" style={{ color: process.color }}>
-              {process.id}
-            </span>
+            <div>
+              <span className="font-mono font-semibold text-sm" style={{ color: process.color }}>
+                {process.id}
+              </span>
+              <span className="text-xs text-[var(--text-muted)] ml-2">
+                AT: {process.arrivalTime} | BT: {process.burstTime}
+              </span>
+            </div>
           </div>
         ))}
       </div>
