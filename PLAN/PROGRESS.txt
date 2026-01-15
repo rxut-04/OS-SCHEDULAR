@@ -1,0 +1,416 @@
+You are given a task to integrate an existing React component in the codebase
+
+The codebase should support:
+- shadcn project structure  
+- Tailwind CSS
+- Typescript
+
+If it doesn't, provide instructions on how to setup project via shadcn CLI, install Tailwind or Typescript.
+
+Determine the default path for components and styles. 
+If default path for components is not /components/ui, provide instructions on why it's important to create this folder
+Copy-paste this component to /components/ui folder:
+```tsx
+animated-radial-chart.tsx
+"use client"
+
+import { motion, useMotionValue, useTransform, animate } from "framer-motion"
+import { useEffect } from "react"
+import { cn } from "@/lib/utils"
+
+interface AnimatedRadialChartProps {
+  value?: number
+  size?: number
+  strokeWidth?: number
+  className?: string
+  showLabels?: boolean
+  duration?: number
+}
+
+export function AnimatedRadialChart({ 
+  value = 74, 
+  size = 300,
+  strokeWidth: customStrokeWidth,
+  className,
+  showLabels = true,
+  duration = 2
+}: AnimatedRadialChartProps) {
+  // Dynamic stroke width based on size if not provided
+  const strokeWidth = customStrokeWidth ?? Math.max(12, size * 0.06)
+  const radius = size * 0.35
+  const center = size / 2
+  const circumference = Math.PI * radius
+
+  // Calculate inner line radius (4px inside the main arc)
+  const innerLineRadius = radius - strokeWidth - 4
+
+  // Motion values for animation
+  const animatedValue = useMotionValue(0)
+  const offset = useTransform(animatedValue, [0, 100], [circumference, 0])
+
+  // Calculate animated positions
+  const progressAngle = useTransform(animatedValue, [0, 100], [-Math.PI, 0])
+  const innerRadius = radius - strokeWidth / 2
+
+  // Animate to the target value on mount or when value changes
+  useEffect(() => {
+    const controls = animate(animatedValue, value, {
+      duration,
+      ease: "easeOut",
+    })
+
+    return controls.stop
+  }, [value, animatedValue, duration])
+
+  // Calculate responsive font size
+  const fontSize = Math.max(16, size * 0.1)
+  const labelFontSize = Math.max(12, size * 0.04)
+
+  return (
+    <div className={cn("relative", className)} style={{ width: size, height: size * 0.7 }}>
+      <svg width={size} height={size * 0.7} viewBox={`0 0 ${size} ${size * 0.7}`} className="overflow-visible">
+        <defs>
+          {/* Base track gradient - white to silver/gray */}
+          <linearGradient id={`baseGradient-${size}`} x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#d1d5db" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#6b7280" stopOpacity="0.6" />
+          </linearGradient>
+
+          {/* Progress gradient - orange */}
+          <linearGradient id={`progressGradient-${size}`} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#f97316" />
+            <stop offset="50%" stopColor="#ea580c" />
+            <stop offset="100%" stopColor="#dc2626" />
+          </linearGradient>
+
+          {/* Text gradient - white to gray */}
+          <linearGradient id={`textGradient-${size}`} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.7" />
+            <stop offset="50%" stopColor="#d1d5db" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#6b7280" stopOpacity="0.3" />
+          </linearGradient>
+
+          {/* Drop shadow filter */}
+          <filter id={`dropshadow-${size}`} x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000000" floodOpacity="0.3" />
+          </filter>
+        </defs>
+
+        {/* Inner thin line (1px light gray) */}
+        <path
+          d={`M ${center - innerLineRadius} ${center} A ${innerLineRadius} ${innerLineRadius} 0 0 1 ${center + innerLineRadius} ${center}`}
+          fill="none"
+          stroke="#6b7280"
+          strokeWidth="1"
+          strokeLinecap="butt"
+          opacity="0.6"
+        />
+
+        {/* Base track */}
+        <path
+          d={`M ${center - radius} ${center} A ${radius} ${radius} 0 0 1 ${center + radius} ${center}`}
+          fill="none"
+          stroke={`url(#baseGradient-${size})`}
+          strokeWidth={strokeWidth}
+          strokeLinecap="butt"
+          filter={`url(#dropshadow-${size})`}
+        />
+
+        {/* Animated Progress track */}
+        <motion.path
+          d={`M ${center - radius} ${center} A ${radius} ${radius} 0 0 1 ${center + radius} ${center}`}
+          fill="none"
+          stroke={`url(#progressGradient-${size})`}
+          strokeWidth={strokeWidth}
+          strokeLinecap="butt"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          filter={`url(#dropshadow-${size})`}
+        />
+
+        {/* Animated extending line */}
+        <motion.line
+          x1={useTransform(progressAngle, (angle) => center + Math.cos(angle) * innerRadius)}
+          y1={useTransform(progressAngle, (angle) => center + Math.sin(angle) * innerRadius)}
+          x2={useTransform(progressAngle, (angle) => center + Math.cos(angle) * innerRadius - Math.cos(angle) * 30)}
+          y2={useTransform(progressAngle, (angle) => center + Math.sin(angle) * innerRadius - Math.sin(angle) * 30)}
+          stroke={`url(#textGradient-${size})`}
+          strokeWidth="1"
+          strokeLinecap="butt"
+        />
+      </svg>
+
+      {/* Animated center percentage display with gradient text */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <motion.div
+          className="font-bold tracking-tight mt-10"
+          style={{ fontSize: `${fontSize}px` }}
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: duration * 0.75 }}
+        >
+          <span
+            style={{
+              background: "linear-gradient(to right, #ffffff, #9ca3af)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
+            <motion.span>{useTransform(animatedValue, (latest) => Math.round(latest))}</motion.span>%
+          </span>
+        </motion.div>
+      </div>
+
+      {/* 0% and 100% labels */}
+      {showLabels && (
+        <>
+          <motion.div
+            className="absolute text-gray-400 font-medium"
+            style={{
+              fontSize: `${labelFontSize}px`,
+              left: center - radius - 5,
+              top: center + strokeWidth / 2,
+            }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: duration * 0.25 }}
+          >
+            0%
+          </motion.div>
+          <motion.div
+            className="absolute text-gray-400 font-medium"
+            style={{
+              fontSize: `${labelFontSize}px`,
+              left: center + radius - 20,
+              top: center + strokeWidth / 2,
+            }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: duration * 0.25 }}
+          >
+            100%
+          </motion.div>
+        </>
+      )}
+    </div>
+  )
+}
+
+
+demo.tsx
+"use client";
+
+import { useState } from "react";
+import { AnimatedRadialChart } from "@/components/ui/animated-radial-chart";
+
+export default function Demo() {
+  const [value, setValue] = useState(74);
+  const [size, setSize] = useState(300);
+  const [strokeWidth, setStrokeWidth] = useState<number | undefined>(undefined);
+  const [showLabels, setShowLabels] = useState(true);
+  const [duration, setDuration] = useState(2);
+
+  return (
+    <div className="min-h-screen bg-black p-8">
+      <div className="max-w-6xl mx-auto space-y-8">
+        {/* Controls */}
+        <div className="bg-zinc-900 p-6 rounded-lg">
+          <h2 className="text-xl font-bold text-white mb-4">Controls</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Value Control */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">
+                Value: {value}%
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={value}
+                onChange={(e) => setValue(Number(e.target.value))}
+                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+              />
+            </div>
+
+            {/* Size Control */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">
+                Size: {size}px
+              </label>
+              <input
+                type="range"
+                min="100"
+                max="500"
+                value={size}
+                onChange={(e) => setSize(Number(e.target.value))}
+                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+              />
+            </div>
+
+            {/* Stroke Width Control */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">
+                Stroke Width: {strokeWidth || 'Auto'}
+              </label>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="range"
+                  min="8"
+                  max="40"
+                  value={strokeWidth || size * 0.06}
+                  onChange={(e) => setStrokeWidth(Number(e.target.value))}
+                  className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                />
+                <button
+                  onClick={() => setStrokeWidth(undefined)}
+                  className="px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600"
+                >
+                  Auto
+                </button>
+              </div>
+            </div>
+
+            {/* Duration Control */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">
+                Duration: {duration}s
+              </label>
+              <input
+                type="range"
+                min="0.5"
+                max="5"
+                step="0.1"
+                value={duration}
+                onChange={(e) => setDuration(Number(e.target.value))}
+                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+              />
+            </div>
+
+            {/* Show Labels Toggle */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">
+                Show Labels
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={showLabels}
+                  onChange={(e) => setShowLabels(e.target.checked)}
+                  className="w-4 h-4 text-orange-500 bg-gray-700 border-gray-600 rounded focus:ring-orange-500"
+                />
+                <span className="text-gray-400 text-sm">Enabled</span>
+              </label>
+            </div>
+
+            {/* Quick Presets */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">
+                Quick Presets
+              </label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setValue(25)}
+                  className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700"
+                >
+                  25%
+                </button>
+                <button
+                  onClick={() => setValue(50)}
+                  className="px-2 py-1 text-xs bg-yellow-600 text-white rounded hover:bg-yellow-700"
+                >
+                  50%
+                </button>
+                <button
+                  onClick={() => setValue(75)}
+                  className="px-2 py-1 text-xs bg-orange-600 text-white rounded hover:bg-orange-700"
+                >
+                  75%
+                </button>
+                <button
+                  onClick={() => setValue(100)}
+                  className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700"
+                >
+                  100%
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Chart Display */}
+        <div className="flex items-center justify-center">
+          <AnimatedRadialChart
+            value={value}
+            size={size}
+            strokeWidth={strokeWidth}
+            showLabels={showLabels}
+            duration={duration}
+            key={`${value}-${size}-${strokeWidth}-${showLabels}-${duration}`} // Force re-render on changes
+          />
+        </div>
+
+        {/* Different Sizes Demo */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold text-white">Size Variations</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-center justify-items-center">
+            <div className="text-center">
+              <p className="text-gray-400 text-sm mb-2">Small (150px)</p>
+              <AnimatedRadialChart value={45} size={150} />
+            </div>
+            <div className="text-center">
+              <p className="text-gray-400 text-sm mb-2">Medium (200px)</p>
+              <AnimatedRadialChart value={65} size={200} />
+            </div>
+            <div className="text-center">
+              <p className="text-gray-400 text-sm mb-2">Large (250px)</p>
+              <AnimatedRadialChart value={85} size={250} />
+            </div>
+            <div className="text-center">
+              <p className="text-gray-400 text-sm mb-2">Extra Large (300px)</p>
+              <AnimatedRadialChart value={95} size={300} />
+            </div>
+          </div>
+        </div>
+
+        {/* Props Documentation */}
+        <div className="bg-zinc-900 p-6 rounded-lg">
+          <h2 className="text-xl font-bold text-white mb-4">Component Props</h2>
+          <div className="space-y-3 text-gray-300">
+            <div><code className="text-orange-400">value</code>: <span className="text-gray-400">number (0-100) - The percentage value to display</span></div>
+            <div><code className="text-orange-400">size</code>: <span className="text-gray-400">number - The width/height of the component in pixels</span></div>
+            <div><code className="text-orange-400">strokeWidth</code>: <span className="text-gray-400">number | undefined - Custom stroke width (auto-calculated if not provided)</span></div>
+            <div><code className="text-orange-400">className</code>: <span className="text-gray-400">string - Additional CSS classes</span></div>
+            <div><code className="text-orange-400">showLabels</code>: <span className="text-gray-400">boolean - Show/hide 0% and 100% labels</span></div>
+            <div><code className="text-orange-400">duration</code>: <span className="text-gray-400">number - Animation duration in seconds</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+```
+
+Install NPM dependencies:
+```bash
+framer-motion
+```
+
+Implementation Guidelines
+ 1. Analyze the component structure and identify all required dependencies
+ 2. Review the component's argumens and state
+ 3. Identify any required context providers or hooks and install them
+ 4. Questions to Ask
+ - What data/props will be passed to this component?
+ - Are there any specific state management requirements?
+ - Are there any required assets (images, icons, etc.)?
+ - What is the expected responsive behavior?
+ - What is the best place to use this component in the app?
+
+Steps to integrate
+ 0. Copy paste all the code above in the correct directories
+ 1. Install external dependencies
+ 2. Fill image assets with Unsplash stock images you know exist
+ 3. Use lucide-react icons for svgs or logos if component requires them

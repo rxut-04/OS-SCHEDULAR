@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { Header as HeroHeader, HeroContent, PulsingCircle } from '@/components/ui/shaders-hero-section';
 
 const CATEGORIES = [
   {
@@ -64,263 +64,162 @@ const CATEGORIES = [
 ];
 
 export default function HomePage() {
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
-  const [hasScrolled, setHasScrolled] = useState(false);
+  const [theme] = useState<'dark' | 'light'>('dark');
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 50) {
-        setHasScrolled(true);
-      }
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const handleScrollDown = () => {
-    setHasScrolled(true);
-    contentRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   return (
-    <div className="min-h-screen grid-pattern">
-<header className="glass-effect sticky top-0 z-50 md:block hidden">
-          <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <Image 
-                src="/assets/logos/logo1.png" 
-                alt="AlgoViz OS Logo" 
-                width={40} 
-                height={40} 
-                className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg"
-              />
-              <div>
-                <h1 className="font-bold text-sm sm:text-base text-[var(--text-primary)]">AlgoViz OS</h1>
-                <p className="text-[10px] sm:text-xs text-[var(--text-muted)]">OS Algorithm Visualizer</p>
-              </div>
+    <div className="min-h-screen relative">
+      
+      <div className="relative z-10">
+        <div className="min-h-screen relative flex flex-col">
+            <HeroHeader />
+            <div className="flex-1 relative">
+                <HeroContent />
+                <PulsingCircle />
             </div>
-
-          <button
-            onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
-            className="p-2 rounded-lg bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors"
-          >
-            {theme === 'dark' ? (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            ) : (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              </svg>
-            )}
-          </button>
         </div>
-      </header>
 
-      <section className="md:hidden min-h-screen flex flex-col items-center justify-center px-4 relative">
-        <button
-          onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
-          className="absolute top-4 right-4 p-2 rounded-lg bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors"
+        <div 
+          ref={contentRef}
+          className="relative bg-transparent backdrop-blur-md border-t border-white/10"
         >
-          {theme === 'dark' ? (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-            </svg>
-          )}
-        </button>
-        
-        <div className="flex items-center gap-3 mb-6">
-          <Image 
-            src="/assets/logos/logo1.png" 
-            alt="AlgoViz OS Logo" 
-            width={48} 
-            height={48} 
-            className="w-12 h-12 rounded-lg"
-          />
-          <div>
-            <h1 className="font-bold text-lg text-[var(--text-primary)]">AlgoViz OS</h1>
-            <p className="text-xs text-[var(--text-muted)]">OS Algorithm Visualizer</p>
-          </div>
-        </div>
-        
-        <h2 className="text-3xl font-bold text-[var(--text-primary)] mb-3 text-center">
-          Operating System
-          <span className="block text-[var(--accent-primary)]">Algorithm Visualizer</span>
-        </h2>
-        <p className="text-sm text-[var(--text-secondary)] max-w-sm mx-auto text-center mb-8">
-          Learn OS concepts visually through interactive animations
-        </p>
-        
-        <button
-          onClick={handleScrollDown}
-          className={`flex flex-col items-center gap-2 text-[var(--accent-primary)] transition-all duration-500 ${hasScrolled ? 'opacity-0' : 'opacity-100 animate-bounce'}`}
-        >
-          <span className="text-xs text-[var(--text-secondary)]">Scroll to explore</span>
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-          </svg>
-        </button>
-      </section>
-
-      <div 
-        ref={contentRef}
-        className={`md:block transition-all duration-700 ${hasScrolled ? 'opacity-100 translate-y-0' : 'md:opacity-100 md:translate-y-0 opacity-0 translate-y-10'}`}
-      >
-
-<main className="max-w-7xl mx-auto px-3 sm:px-4 py-8 sm:py-16">
-          <div className="text-center mb-8 sm:mb-16 animate-fade-in hidden md:block">
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-[var(--text-primary)] mb-4 sm:mb-6">
-              Operating System
-              <span className="block text-[var(--accent-primary)]">Algorithm Visualizer</span>
-            </h2>
-            <p className="text-sm sm:text-lg text-[var(--text-secondary)] max-w-2xl mx-auto px-2">
-              Learn Operating System concepts visually through interactive animations. 
-              Understand how CPU scheduling, disk management, and memory allocation work step-by-step.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-16">
-          {CATEGORIES.map((category, index) => (
-            <div
-              key={category.id}
-              className="animate-fade-in"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-{category.available ? (
-                  <Link
-                    href={category.href}
-                    className="group block glass-effect rounded-2xl p-4 sm:p-6 h-full transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
-                    style={{ 
-                      borderColor: `${category.color}30`,
-                      '--hover-glow': category.color 
-                    } as React.CSSProperties}
-                  >
-                    <div className="flex items-start gap-3 sm:gap-4">
-                      <div 
-                        className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110"
-                        style={{ backgroundColor: `${category.color}20`, color: category.color }}
-                      >
-                        <div className="w-6 h-6 sm:w-8 sm:h-8">{category.icon}</div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-base sm:text-xl font-semibold text-[var(--text-primary)] mb-1 sm:mb-2 group-hover:text-[var(--accent-primary)] transition-colors">
-                          {category.title}
-                        </h3>
-                        <p className="text-xs sm:text-sm text-[var(--text-secondary)] mb-3 sm:mb-4 line-clamp-2">
-                          {category.description}
-                        </p>
-                        <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                          {category.algorithms.map(algo => (
-                            <span 
-                              key={algo}
-                              className="px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs font-mono"
-                              style={{ backgroundColor: `${category.color}15`, color: category.color }}
-                            >
-                              {algo}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-3 sm:mt-4 flex items-center text-xs sm:text-sm font-medium" style={{ color: category.color }}>
-                      Start Learning
-                      <svg className="w-3 h-3 sm:w-4 sm:h-4 ml-2 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                      </svg>
-                    </div>
-                  </Link>
-                ) : (
-                  <div
-                    className="glass-effect rounded-2xl p-4 sm:p-6 h-full opacity-60 cursor-not-allowed"
-                  >
-                    <div className="flex items-start gap-3 sm:gap-4">
-                      <div 
-                        className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center flex-shrink-0"
-                        style={{ backgroundColor: `${category.color}10`, color: `${category.color}80` }}
-                      >
-                        <div className="w-6 h-6 sm:w-8 sm:h-8">{category.icon}</div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 sm:mb-2 flex-wrap">
-                          <h3 className="text-base sm:text-xl font-semibold text-[var(--text-primary)]">
+          <main className="max-w-7xl mx-auto px-6 py-24">
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-24">
+              {CATEGORIES.map((category, index) => (
+                <div
+                  key={category.id}
+                  className="animate-fade-in"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  {category.available ? (
+                    <Link
+                      href={category.href}
+                      className="group block relative h-full bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8 transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:scale-[1.01]"
+                    >
+                      <div className="flex flex-col h-full justify-between">
+                        <div>
+                            <div className="flex items-center justify-between mb-6">
+                                <div 
+                                    className="w-12 h-12 rounded-2xl flex items-center justify-center bg-white/5 text-white"
+                                >
+                                    <div className="w-6 h-6">{category.icon}</div>
+                                </div>
+                                <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-300 border border-green-500/30">
+                                    Start Learning
+                                </span>
+                            </div>
+                            
+                            <h3 className="text-2xl font-medium text-white mb-3 group-hover:text-blue-300 transition-colors">
                             {category.title}
-                          </h3>
-                          <span className="px-2 py-0.5 rounded text-[10px] sm:text-xs bg-[var(--bg-tertiary)] text-[var(--text-muted)]">
-                            Coming Soon
-                          </span>
+                            </h3>
+                            <p className="text-white/60 text-sm leading-relaxed mb-6">
+                            {category.description}
+                            </p>
                         </div>
-                        <p className="text-xs sm:text-sm text-[var(--text-secondary)] mb-3 sm:mb-4 line-clamp-2">
-                          {category.description}
-                        </p>
-                        <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                        
+                        <div className="flex flex-wrap gap-2">
                           {category.algorithms.map(algo => (
                             <span 
                               key={algo}
-                              className="px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs font-mono bg-[var(--bg-tertiary)] text-[var(--text-muted)]"
+                              className="px-2 py-1 rounded-md text-xs font-mono bg-white/5 text-white/50 border border-white/5"
                             >
                               {algo}
                             </span>
                           ))}
                         </div>
                       </div>
+                    </Link>
+                  ) : (
+                    <div className="group block relative h-full bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8 opacity-60">
+                        <div className="flex flex-col h-full justify-between">
+                            <div>
+                                <div className="flex items-center justify-between mb-6">
+                                    <div 
+                                        className="w-12 h-12 rounded-2xl flex items-center justify-center bg-white/5 text-white/50"
+                                    >
+                                        <div className="w-6 h-6">{category.icon}</div>
+                                    </div>
+                                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-white/10 text-white/40 border border-white/10">
+                                        Coming Soon
+                                    </span>
+                                </div>
+                                
+                                <h3 className="text-2xl font-medium text-white/80 mb-3">
+                                {category.title}
+                                </h3>
+                                <p className="text-white/40 text-sm leading-relaxed mb-6">
+                                {category.description}
+                                </p>
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-2">
+                            {category.algorithms.map(algo => (
+                                <span 
+                                key={algo}
+                                className="px-2 py-1 rounded-md text-xs font-mono bg-white/5 text-white/30 border border-white/5"
+                                >
+                                {algo}
+                                </span>
+                            ))}
+                            </div>
+                        </div>
                     </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-12 text-center animate-fade-in">
+              <h3 className="text-2xl md:text-3xl font-light text-white mb-12">
+                How It Works
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
+                {/* Connecting Lines (Desktop only) */}
+                <div className="hidden md:block absolute top-8 left-[16%] right-[16%] h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full bg-white/10 border border-white/20 flex items-center justify-center mx-auto mb-6 relative z-10 backdrop-blur-xl">
+                    <span className="text-xl font-medium text-white">1</span>
                   </div>
-                )}
+                  <h4 className="text-lg font-medium text-white mb-2">Select Algorithm</h4>
+                  <p className="text-sm text-white/60 leading-relaxed">
+                    Choose from various OS algorithms like FCFS, SJF, Round Robin, and more
+                  </p>
+                </div>
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full bg-white/10 border border-white/20 flex items-center justify-center mx-auto mb-6 relative z-10 backdrop-blur-xl">
+                    <span className="text-xl font-medium text-white">2</span>
+                  </div>
+                  <h4 className="text-lg font-medium text-white mb-2">Enter Input</h4>
+                  <p className="text-sm text-white/60 leading-relaxed">
+                    Input your custom process data including arrival time, burst time, and priority
+                  </p>
+                </div>
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full bg-white/10 border border-white/20 flex items-center justify-center mx-auto mb-6 relative z-10 backdrop-blur-xl">
+                    <span className="text-xl font-medium text-white">3</span>
+                  </div>
+                  <h4 className="text-lg font-medium text-white mb-2">Watch & Learn</h4>
+                  <p className="text-sm text-white/60 leading-relaxed">
+                    View animated Gantt charts and step-by-step explanations of algorithm decisions
+                  </p>
+                </div>
+              </div>
             </div>
-          ))}
+          </main>
+
+          <footer className="border-t border-white/10 bg-black/20">
+            <div className="max-w-7xl mx-auto px-6 py-12 text-center">
+              <p className="text-white font-medium mb-2">AlgoViz OS - Learn Operating System Algorithms Visually</p>
+              <p className="text-white/40 text-sm">Built for students and educators</p>
+            </div>
+          </footer>
         </div>
-
-<div className="glass-effect rounded-2xl p-4 sm:p-8 animate-fade-in" style={{ animationDelay: '400ms' }}>
-            <h3 className="text-lg sm:text-xl font-semibold text-[var(--text-primary)] mb-4 sm:mb-6 text-center">
-              How It Works
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-              <div className="text-center">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[var(--accent-primary)]/20 flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                  <span className="text-lg sm:text-xl font-bold text-[var(--accent-primary)]">1</span>
-                </div>
-                <h4 className="font-semibold text-[var(--text-primary)] mb-1 sm:mb-2 text-sm sm:text-base">Select Algorithm</h4>
-                <p className="text-xs sm:text-sm text-[var(--text-secondary)]">
-                  Choose from various OS algorithms like FCFS, SJF, Round Robin, and more
-                </p>
-              </div>
-              <div className="text-center">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[var(--accent-secondary)]/20 flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                  <span className="text-lg sm:text-xl font-bold text-[var(--accent-secondary)]">2</span>
-                </div>
-                <h4 className="font-semibold text-[var(--text-primary)] mb-1 sm:mb-2 text-sm sm:text-base">Enter Input</h4>
-                <p className="text-xs sm:text-sm text-[var(--text-secondary)]">
-                  Input your custom process data including arrival time, burst time, and priority
-                </p>
-              </div>
-              <div className="text-center">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[var(--accent-tertiary)]/20 flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                  <span className="text-lg sm:text-xl font-bold text-[var(--accent-tertiary)]">3</span>
-                </div>
-                <h4 className="font-semibold text-[var(--text-primary)] mb-1 sm:mb-2 text-sm sm:text-base">Watch & Learn</h4>
-                <p className="text-xs sm:text-sm text-[var(--text-secondary)]">
-                  View animated Gantt charts and step-by-step explanations of algorithm decisions
-                </p>
-              </div>
-            </div>
-            </div>
-        </main>
-
-        <footer className="mt-8 sm:mt-16 py-6 sm:py-8 border-t border-[var(--border-color)]">
-          <div className="max-w-7xl mx-auto px-3 sm:px-4 text-center text-[var(--text-muted)] text-xs sm:text-sm">
-            <p>AlgoViz OS - Learn Operating System Algorithms Visually</p>
-            <p className="mt-2">Built for students and educators</p>
-          </div>
-        </footer>
       </div>
     </div>
   );

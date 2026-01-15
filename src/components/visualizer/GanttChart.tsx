@@ -67,23 +67,23 @@ export function GanttChart({
   }
 
 return (
-      <div className="glass-effect rounded-xl p-4 sm:p-6 animate-fade-in">
+      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-6 animate-fade-in">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-          <h3 className="text-base sm:text-lg font-semibold text-[var(--text-primary)] flex items-center gap-2">
-            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--accent-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <h3 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
             </svg>
             Execution Timeline
           </h3>
           
-<div className="flex items-center gap-2">
-            <div className="flex gap-0.5 sm:gap-1 p-0.5 sm:p-1 rounded-lg bg-[var(--bg-tertiary)]">
+          <div className="flex items-center gap-2">
+            <div className="flex gap-0.5 sm:gap-1 p-0.5 sm:p-1 rounded-lg bg-black/20">
               <button
                 onClick={() => setView('2d')}
                 className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${
                   view === '2d' 
-                    ? 'bg-[var(--accent-primary)] text-white' 
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                    ? 'bg-blue-500 text-white shadow-sm' 
+                    : 'text-white/60 hover:text-white hover:bg-white/5'
                 }`}
               >
                 2D
@@ -92,8 +92,8 @@ return (
                 onClick={() => setView('3d')}
                 className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${
                   view === '3d' 
-                    ? 'bg-[var(--accent-primary)] text-white' 
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                    ? 'bg-blue-500 text-white shadow-sm' 
+                    : 'text-white/60 hover:text-white hover:bg-white/5'
                 }`}
               >
                 3D
@@ -103,7 +103,7 @@ return (
             {view === '3d' && (
               <Link
                 href={`/cpu-scheduling/3d-view?data=${encodeURIComponent(JSON.stringify({ ganttChart, processes, algorithm }))}`}
-                className="p-1.5 sm:p-2 rounded-lg bg-[var(--bg-tertiary)] text-[var(--text-muted)] hover:text-[var(--accent-primary)] hover:bg-[var(--accent-primary)]/10 transition-all"
+                className="p-1.5 sm:p-2 rounded-lg bg-black/20 text-white/60 hover:text-blue-400 hover:bg-blue-500/10 transition-all"
                 title="Open fullscreen 3D view"
               >
                 <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,14 +114,14 @@ return (
           </div>
         </div>
       
-{view === '3d' ? (
-          <Suspense fallback={<div className="w-full h-[250px] sm:h-[350px] rounded-xl bg-[#0a0a15] flex items-center justify-center text-[var(--text-muted)]">Loading 3D...</div>}>
+        {view === '3d' ? (
+          <Suspense fallback={<div className="w-full h-[250px] sm:h-[350px] rounded-xl bg-black/40 flex items-center justify-center text-white/40">Loading 3D...</div>}>
             <GanttChart3D 
               ganttChart={ganttChart}
               processes={processes}
               animatedTime={animatedTime}
             />
-            <p className="text-[10px] sm:text-xs text-[var(--text-muted)] mt-2 text-center">Drag to rotate view</p>
+            <p className="text-[10px] sm:text-xs text-white/40 mt-2 text-center">Drag to rotate view</p>
           </Suspense>
         ) : (
           <div className="overflow-x-auto pb-4 -mx-2 sm:mx-0 px-2 sm:px-0">
@@ -144,11 +144,11 @@ return (
                       </span>
                     </div>
                     
-                    <div className="flex-1 relative h-8 sm:h-10 bg-[var(--bg-tertiary)] rounded-lg overflow-hidden">
+                    <div className="flex-1 relative h-8 sm:h-10 bg-black/20 rounded-lg overflow-hidden border border-white/5">
                       <div 
                         className="absolute inset-0 opacity-20"
                         style={{
-                          backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 39px, var(--border-color) 39px, var(--border-color) 40px)`,
+                          backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.1) 39px, rgba(255,255,255,0.1) 40px)`,
                         }}
                       />
                       
@@ -166,7 +166,7 @@ return (
                               absolute top-1 bottom-1 rounded-md flex items-center justify-center
                               transition-all duration-300 ease-out
                               ${(isPast || isActive) ? 'opacity-100' : 'opacity-20'}
-                              ${isCurrent ? 'ring-2 ring-white ring-offset-1 ring-offset-[var(--bg-tertiary)]' : ''}
+                              ${isCurrent ? 'ring-2 ring-white ring-offset-1 ring-offset-black/20' : ''}
                             `}
                             style={{
                               left: `${left}%`,
@@ -193,7 +193,7 @@ return (
               <div className="flex items-center mt-3 sm:mt-4">
                 <div className="w-12 sm:w-16 flex-shrink-0" />
                 <div className="flex-1 relative h-5 sm:h-6">
-                  <div className="absolute inset-x-0 top-0 h-px bg-[var(--border-color)]" />
+                  <div className="absolute inset-x-0 top-0 h-px bg-white/10" />
                   {timeMarkers.map(time => (
                     <div
                       key={time}
@@ -201,11 +201,11 @@ return (
                       style={{ left: `${(time / totalTime) * 100}%` }}
                     >
                       <div 
-                        className={`w-px h-1.5 sm:h-2 ${animatedTime >= time ? 'bg-[var(--accent-primary)]' : 'bg-[var(--border-color)]'}`}
+                        className={`w-px h-1.5 sm:h-2 ${animatedTime >= time ? 'bg-blue-400' : 'bg-white/10'}`}
                       />
                       <span 
                         className={`text-[10px] sm:text-xs font-mono mt-0.5 sm:mt-1 transition-colors ${
-                          animatedTime >= time ? 'text-[var(--accent-primary)]' : 'text-[var(--text-muted)]'
+                          animatedTime >= time ? 'text-blue-400' : 'text-white/40'
                         }`}
                       >
                         {time}
@@ -215,13 +215,13 @@ return (
                   
                   {animatedTime >= 0 && (
                     <div
-                      className="absolute top-0 w-0.5 h-full bg-[var(--accent-primary)] transition-all duration-300"
+                      className="absolute top-0 w-0.5 h-full bg-blue-400 transition-all duration-300"
                       style={{ 
                         left: `${(animatedTime / totalTime) * 100}%`,
-                        boxShadow: '0 0 10px var(--accent-primary)'
+                        boxShadow: '0 0 10px #60a5fa'
                       }}
                     >
-                      <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 sm:w-3 sm:h-3 bg-[var(--accent-primary)] rounded-full" />
+                      <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 sm:w-3 sm:h-3 bg-blue-400 rounded-full" />
                     </div>
                   )}
                 </div>
@@ -230,11 +230,11 @@ return (
           </div>
         )}
 
-        <div className="flex flex-wrap gap-2 sm:gap-4 mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-[var(--border-color)]">
+        <div className="flex flex-wrap gap-2 sm:gap-4 mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-white/10">
           {processes.map(process => (
             <div 
               key={process.id}
-              className="flex items-center gap-2 sm:gap-3 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all hover:scale-105"
+              className="flex items-center gap-2 sm:gap-3 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all hover:scale-105 border border-white/5"
               style={{ backgroundColor: `${process.color}15` }}
             >
               <div 
@@ -245,7 +245,7 @@ return (
                 <span className="font-mono font-semibold text-xs sm:text-sm" style={{ color: process.color }}>
                   {process.id}
                 </span>
-                <span className="text-[10px] sm:text-xs text-[var(--text-muted)] ml-1 sm:ml-2">
+                <span className="text-[10px] sm:text-xs text-white/60 ml-1 sm:ml-2">
                   AT: {process.arrivalTime} | BT: {process.burstTime}
                 </span>
               </div>

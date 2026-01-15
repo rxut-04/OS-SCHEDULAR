@@ -18,12 +18,12 @@ export function StepExplanation({ steps, currentStep, processes }: StepExplanati
   const currentStepData = steps[currentStep];
 
   return (
-    <div className="glass-effect rounded-xl p-4 sm:p-6 animate-fade-in">
+    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3 sm:mb-4">
-        <h3 className="text-base sm:text-lg font-semibold text-[var(--text-primary)]">
+        <h3 className="text-base sm:text-lg font-semibold text-white">
           Step-by-Step
         </h3>
-        <span className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-mono bg-[var(--accent-primary)]/10 text-[var(--accent-primary)]">
+        <span className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-mono bg-blue-500/10 text-blue-400">
           {currentStep + 1} / {steps.length}
         </span>
       </div>
@@ -38,7 +38,7 @@ export function StepExplanation({ steps, currentStep, processes }: StepExplanati
             }}
           >
             <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2 flex-wrap">
-              <span className="px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs font-mono font-semibold bg-[var(--bg-tertiary)] text-[var(--text-secondary)]">
+              <span className="px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs font-mono font-semibold bg-white/10 text-white/60">
                 T = {currentStepData.time}
               </span>
               <span 
@@ -48,14 +48,14 @@ export function StepExplanation({ steps, currentStep, processes }: StepExplanati
                 {currentStepData.action}
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
+            <p className="text-xs sm:text-sm text-white/60 leading-relaxed">
               {currentStepData.reason}
             </p>
           </div>
 
           {currentStepData.readyQueue.length > 0 && (
-            <div className="p-2 sm:p-3 rounded-lg bg-[var(--bg-tertiary)]">
-              <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] block mb-1.5 sm:mb-2">
+            <div className="p-2 sm:p-3 rounded-lg bg-white/5 border border-white/5">
+              <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-white/40 block mb-1.5 sm:mb-2">
                 Ready Queue
               </span>
               <div className="flex flex-wrap gap-1.5 sm:gap-2">
@@ -76,20 +76,20 @@ export function StepExplanation({ steps, currentStep, processes }: StepExplanati
           )}
         </div>
       ) : (
-        <div className="text-center py-6 sm:py-8 text-[var(--text-muted)]">
+        <div className="text-center py-6 sm:py-8 text-white/40">
           <p className="text-xs sm:text-sm">Click &quot;Visualize&quot; to start the animation</p>
         </div>
       )}
 
-      <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-[var(--border-color)]">
+      <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-white/10">
         <div className="flex gap-0.5 sm:gap-1 overflow-x-auto pb-1 sm:pb-2">
           {steps.map((step, index) => (
             <div
               key={index}
               className={`
                 h-1.5 sm:h-2 rounded-full flex-shrink-0 transition-all duration-300
-                ${index === currentStep ? 'w-4 sm:w-6 bg-[var(--accent-primary)]' : 
-                  index < currentStep ? 'w-1.5 sm:w-2 bg-[var(--accent-tertiary)]' : 'w-1.5 sm:w-2 bg-[var(--border-color)]'}
+                ${index === currentStep ? 'w-4 sm:w-6 bg-blue-400' : 
+                  index < currentStep ? 'w-1.5 sm:w-2 bg-emerald-400' : 'w-1.5 sm:w-2 bg-white/10'}
               `}
             />
           ))}

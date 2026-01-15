@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from 'react';
-import Link from 'next/link';
+import { Header } from '@/components/ui/shaders-hero-section';
 import { Process, SchedulingResult } from '@/lib/algorithms/types';
 import { fcfs, sjf, roundRobin, priorityScheduling } from '@/lib/algorithms';
 import { ProcessInputForm } from '@/components/visualizer/ProcessInputForm';
@@ -89,51 +89,24 @@ export default function CpuSchedulingPage() {
   const currentAlgo = ALGORITHMS.find(a => a.id === selectedAlgorithm);
 
   return (
-    <div className="min-h-screen grid-pattern">
-<header className="glass-effect sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2 sm:gap-3 group">
-              <img 
-                src="/assets/logos/logo1.png" 
-                alt="AlgoViz OS" 
-                className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg object-contain"
-              />
-              <div>
-                <h1 className="font-bold text-sm sm:text-base text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors">
-                  AlgoViz OS
-                </h1>
-                <p className="text-[10px] sm:text-xs text-[var(--text-muted)]">CPU Scheduling</p>
-              </div>
-            </Link>
+    <div className="min-h-screen relative">
+      <div className="relative z-10">
+        <Header
+          title="CPU Scheduling Algorithms"
+          description="Select an algorithm, enter process data, and visualize step-by-step execution"
+        />
 
-          <button
-            onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
-            className="p-2 rounded-lg bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors"
-          >
-            {theme === 'dark' ? (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            ) : (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              </svg>
-            )}
-          </button>
-        </div>
-      </header>
-
-<main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
-          <div className="mb-4 sm:mb-8">
-            <h2 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)] mb-1 sm:mb-2">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-8 sm:py-12">
+          <div className="mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2 sm:mb-3">
               CPU Scheduling Algorithms
             </h2>
-            <p className="text-sm sm:text-base text-[var(--text-secondary)]">
+            <p className="text-sm sm:text-base text-white/60">
               Select an algorithm, enter process data, and visualize step-by-step execution
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-8">
+          <div className="flex flex-wrap gap-2 sm:gap-3 mb-6 sm:mb-10">
             {ALGORITHMS.map(algo => (
               <button
                 key={algo.id}
@@ -143,28 +116,28 @@ export default function CpuSchedulingPage() {
                   setCurrentStep(-1);
                 }}
                 className={`
-                  px-3 sm:px-4 py-2 sm:py-3 rounded-xl transition-all duration-300 text-left
+                  px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-300 text-left border
                   ${selectedAlgorithm === algo.id
-                    ? 'bg-[var(--accent-primary)] text-[var(--bg-primary)] shadow-lg shadow-[var(--accent-primary)]/20'
-                    : 'glass-effect text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}
+                    ? 'bg-white/10 text-white border-white/30 shadow-lg shadow-white/5'
+                    : 'bg-white/5 text-white/60 border-white/5 hover:text-white hover:bg-white/10 hover:border-white/20'}
                 `}
               >
                 <span className="block font-semibold text-sm sm:text-base">{algo.name}</span>
-                <span className="text-[10px] sm:text-xs opacity-70 hidden sm:block">{algo.fullName}</span>
+                <span className="text-[10px] sm:text-xs opacity-60 hidden sm:block mt-1">{algo.fullName}</span>
               </button>
             ))}
           </div>
 
           {currentAlgo && (
-            <div className="glass-effect rounded-xl p-3 sm:p-4 mb-4 sm:mb-8 flex items-start gap-2 sm:gap-3">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-[var(--accent-primary)]/20 flex items-center justify-center flex-shrink-0">
-                <svg className="w-3 h-3 sm:w-4 sm:h-4 text-[var(--accent-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-10 flex items-start gap-3 sm:gap-4">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-sm sm:text-base text-[var(--text-primary)]">{currentAlgo.fullName}</h3>
-                <p className="text-xs sm:text-sm text-[var(--text-secondary)]">{currentAlgo.description}</p>
+                <h3 className="font-semibold text-base sm:text-lg text-white mb-1">{currentAlgo.fullName}</h3>
+                <p className="text-xs sm:text-sm text-white/60 leading-relaxed">{currentAlgo.description}</p>
               </div>
             </div>
           )}
@@ -223,16 +196,16 @@ export default function CpuSchedulingPage() {
                   </div>
                 </>
               ) : (
-                <div className="glass-effect rounded-xl p-8 sm:p-12 text-center">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 rounded-full bg-[var(--bg-tertiary)] flex items-center justify-center">
-                    <svg className="w-8 h-8 sm:w-10 sm:h-10 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 sm:p-12 text-center">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
+                    <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
                   </div>
-                  <h3 className="text-lg sm:text-xl font-semibold text-[var(--text-primary)] mb-2">
+                  <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">
                     Ready to Visualize
                   </h3>
-                  <p className="text-sm sm:text-base text-[var(--text-secondary)] max-w-md mx-auto">
+                  <p className="text-sm sm:text-base text-white/60 max-w-md mx-auto leading-relaxed">
                     Enter process details on the left and click &quot;Visualize Algorithm&quot; to see the scheduling in action
                   </p>
                 </div>
@@ -241,11 +214,12 @@ export default function CpuSchedulingPage() {
           </div>
         </main>
 
-        <footer className="mt-8 sm:mt-16 py-6 sm:py-8 border-t border-[var(--border-color)]">
-          <div className="max-w-7xl mx-auto px-3 sm:px-4 text-center text-[var(--text-muted)] text-xs sm:text-sm">
+        <footer className="mt-8 sm:mt-16 py-6 sm:py-8 border-t border-white/10 bg-black/20 backdrop-blur-sm">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 text-center text-white/40 text-xs sm:text-sm">
             <p>AlgoViz OS - Learn Operating System Algorithms Visually</p>
           </div>
         </footer>
+      </div>
     </div>
   );
 }
