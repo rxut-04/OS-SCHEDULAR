@@ -169,7 +169,7 @@ export function Header() {
         {/* Logo */}
         <div className="flex items-center gap-2">
            <Image 
-              src="/assets/logos/logo1.png" 
+              src="https://cdn-icons-png.flaticon.com/512/12460/12460828.png" 
               alt="AlgoViz OS Logo" 
               width={32} 
               height={32} 
