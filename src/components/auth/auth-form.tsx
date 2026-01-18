@@ -16,12 +16,18 @@ export function AuthForm({ view }: AuthFormProps) {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setLoading(true)
+
+    const supabase = createClient()
+    if (!supabase) {
+      setError('Supabase is not configured. Please try again later.')
+      setLoading(false)
+      return
+    }
 
     try {
       if (view === 'signup') {
