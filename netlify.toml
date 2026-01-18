@@ -1,11 +1,9 @@
 [build]
   base = "."
-  install = "npm ci --include=optional --include=dev && npm install --no-save lightningcss-linux-x64-gnu@1.30.2"
-  command = "npm rebuild lightningcss && npm run build"
+  install = "npm ci --include=dev"
+  command = "npm run build"
   publish = ".next"
 
 [build.environment]
   NODE_VERSION = "22"
-  NPM_CONFIG_OPTIONAL = "true"
   NPM_CONFIG_IGNORE_SCRIPTS = "false"
-  NPM_CONFIG_PRODUCTION = "false"
