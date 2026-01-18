@@ -1,8 +1,10 @@
 [build]
   base = "."
-  install = "npm ci"
+  install = "npm ci --include=optional"
   command = "npm run build"
   publish = ".next"
 
 [build.environment]
   NODE_VERSION = "22"
+  NPM_CONFIG_OPTIONAL = "true"
+  NPM_CONFIG_IGNORE_SCRIPTS = "false"
