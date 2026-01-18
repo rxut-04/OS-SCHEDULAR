@@ -1,7 +1,7 @@
 [build]
   base = "."
-  install = "npm ci --include=optional --include=dev"
-  command = "npm run build"
+  install = "npm ci --include=optional --include=dev && npm install --no-save lightningcss-linux-x64-gnu@1.30.2"
+  command = "npm rebuild lightningcss && npm run build"
   publish = ".next"
 
 [build.environment]
