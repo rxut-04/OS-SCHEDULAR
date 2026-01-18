@@ -1,7 +1,7 @@
 [build]
   base = "."
   install = "npm ci --include=dev"
-  command = "npm run build"
+  command = "npm install --no-save lightningcss-linux-x64-gnu@1.30.2 @tailwindcss/oxide-linux-x64-gnu@4.1.18 && npm run build"
   publish = ".next"
 
 [build.environment]
