@@ -85,6 +85,11 @@ function findBinary(rootDir, pattern) {
 }
 
 function main() {
+  if (process.env.NETLIFY === "true") {
+    log("Skipping install on Netlify.");
+    return;
+  }
+
   if (process.platform !== "linux" || process.arch !== "x64") {
     log("Skipping install (not Linux x64).");
     return;
