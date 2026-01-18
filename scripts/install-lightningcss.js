@@ -24,18 +24,16 @@ function ensureBinaryPresent() {
     return;
   }
 
-  const sourceBinary = path.join(
-    projectRoot,
-    "node_modules",
-    "lightningcss-linux-x64-gnu",
-    "lightningcss.linux-x64-gnu.node"
+  const sourceBinary = findBinary(
+    path.join(projectRoot, "node_modules", "lightningcss-linux-x64-gnu"),
+    /lightningcss\.linux-x64-gnu\.node$/
   );
-  if (!fs.existsSync(sourceBinary)) {
+  if (!sourceBinary) {
     throw new Error("Linux binary package installed, but binary not found.");
   }
 
   fs.copyFileSync(sourceBinary, expectedBinary);
-  log("Copied Linux binary into lightningcss package.");
+  log(`Copied Linux binary into lightningcss package from ${sourceBinary}.`);
 }
 
 function ensureTailwindOxidePresent() {
@@ -52,19 +50,38 @@ function ensureTailwindOxidePresent() {
     return;
   }
 
-  const sourceBinary = path.join(
-    projectRoot,
-    "node_modules",
-    "@tailwindcss",
-    "oxide-linux-x64-gnu",
-    "tailwindcss-oxide.linux-x64-gnu.node"
+  const sourceBinary = findBinary(
+    path.join(projectRoot, "node_modules", "@tailwindcss", "oxide-linux-x64-gnu"),
+    /tailwindcss-oxide\.linux-x64-gnu\.node$/
   );
-  if (!fs.existsSync(sourceBinary)) {
+  if (!sourceBinary) {
     throw new Error("Tailwind oxide binary package installed, but binary not found.");
   }
 
   fs.copyFileSync(sourceBinary, expectedBinary);
-  log("Copied Tailwind oxide binary into @tailwindcss/oxide.");
+  log(`Copied Tailwind oxide binary into @tailwindcss/oxide from ${sourceBinary}.`);
+}
+
+function findBinary(rootDir, pattern) {
+  if (!fs.existsSync(rootDir)) {
+    return null;
+  }
+
+  const stack = [rootDir];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    const entries = fs.readdirSync(current, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        stack.push(fullPath);
+      } else if (pattern.test(entry.name)) {
+        return fullPath;
+      }
+    }
+  }
+
+  return null;
 }
 
 function main() {
