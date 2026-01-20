@@ -80,7 +80,7 @@ const AIML_MODULES: Module[] = [
     id: 'ml-01',
     name: 'K-Means Clustering',
     category: 'Unsupervised Learning',
-    image: '/assets/models/kmeans.png',
+    image: '',
     href: '/aiml/kmeans',
     gradient: 'from-purple-500/20 to-pink-500/20',
   },
@@ -88,7 +88,7 @@ const AIML_MODULES: Module[] = [
     id: 'ml-02',
     name: 'Linear Regression',
     category: 'Supervised Learning',
-    image: '/assets/models/linear-regression.png',
+    image: '',
     href: '/aiml/linear-regression',
     gradient: 'from-blue-500/20 to-cyan-500/20',
   },
@@ -96,7 +96,7 @@ const AIML_MODULES: Module[] = [
     id: 'ml-03',
     name: 'Logistic Regression',
     category: 'Classification',
-    image: '/assets/models/logistic-regression.png',
+    image: '',
     href: '/aiml/logistic-regression',
     gradient: 'from-green-500/20 to-emerald-500/20',
   },
@@ -104,7 +104,7 @@ const AIML_MODULES: Module[] = [
     id: 'ml-04',
     name: 'Neural Network',
     category: 'Deep Learning',
-    image: '/assets/models/neural-network.png',
+    image: '',
     href: '/aiml/neural-network',
     gradient: 'from-violet-500/20 to-purple-500/20',
   },
@@ -112,7 +112,7 @@ const AIML_MODULES: Module[] = [
     id: 'ml-05',
     name: 'Decision Tree',
     category: 'Classification',
-    image: '/assets/models/decision-tree.png',
+    image: '',
     href: '/aiml/decision-tree',
     gradient: 'from-orange-500/20 to-amber-500/20',
   },
@@ -120,7 +120,7 @@ const AIML_MODULES: Module[] = [
     id: 'ml-06',
     name: 'KNN',
     category: 'Classification',
-    image: '/assets/models/knn.png',
+    image: '',
     href: '/aiml/knn',
     gradient: 'from-rose-500/20 to-red-500/20',
   },
@@ -128,7 +128,7 @@ const AIML_MODULES: Module[] = [
     id: 'ml-07',
     name: 'Reinforcement Learning',
     category: 'Agent-Based Learning',
-    image: '/assets/models/reinforcement.png',
+    image: '',
     href: '/aiml/reinforcement-learning',
     gradient: 'from-indigo-500/20 to-blue-500/20',
   },
@@ -299,26 +299,41 @@ export default function KineticModulesList() {
         >
           <AnimatePresence mode="wait">
             {activeId && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.5, filter: "blur(10px)" }}
-                animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-                exit={{ opacity: 0, scale: 0.5, filter: "blur(10px)" }}
-                transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                className={`relative h-64 w-80 overflow-hidden rounded-xl border shadow-2xl ${
-                  activeTab === 'aiml' 
-                    ? 'border-purple-500/30 bg-gradient-to-br from-purple-900/50 to-neutral-900' 
-                    : 'border-white/10 bg-neutral-900'
-                }`}
-              >
-                {/* Find the active image */}
-                {MODULES.find((t) => t.id === activeId)?.image && (
-                  <Image
-                    src={MODULES.find((t) => t.id === activeId)?.image || '/assets/models/placeholder.png'}
-                    alt="Preview"
-                    fill
-                    className="h-full w-full object-cover"
-                  />
-                )}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.5, filter: "blur(10px)" }}
+                  animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, scale: 0.5, filter: "blur(10px)" }}
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                  className={`relative h-64 w-80 overflow-hidden rounded-xl border shadow-2xl ${
+                    activeTab === 'aiml' 
+                      ? 'border-purple-500/30 bg-gradient-to-br from-purple-900/50 to-neutral-900' 
+                      : 'border-white/10 bg-neutral-900'
+                  }`}
+                >
+                  {MODULES.find((t) => t.id === activeId)?.image ? (
+                    <Image
+                      src={MODULES.find((t) => t.id === activeId)?.image || ''}
+                      alt="Preview"
+                      fill
+                      sizes="320px"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className={`absolute inset-0 flex items-center justify-center ${
+                      activeTab === 'aiml' 
+                        ? 'bg-gradient-to-br from-purple-900/80 to-indigo-900/80' 
+                        : 'bg-gradient-to-br from-neutral-800 to-neutral-900'
+                    }`}>
+                      <div className="text-center">
+                        <div className={`text-6xl mb-2 ${activeTab === 'aiml' ? 'text-purple-400' : 'text-neutral-500'}`}>
+                          {activeTab === 'aiml' ? <Brain size={64} /> : <Cpu size={64} />}
+                        </div>
+                        <span className="text-xs uppercase tracking-widest text-white/40">
+                          {MODULES.find((t) => t.id === activeId)?.category}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 
                 {/* Overlay Metadata */}
                 <div className="absolute bottom-0 w-full bg-gradient-to-t from-black/80 to-transparent p-4">
@@ -363,11 +378,11 @@ function ModuleRow({
     <motion.div
       layout
       initial={{ opacity: 0, y: 20 }}
-      animate={{ 
-        opacity: isDimmed ? 0.3 : 1, 
-        y: 0,
-        backgroundColor: isActive && isMobile ? 'rgba(255,255,255,0.03)' : 'transparent'
-      }}
+        animate={{ 
+          opacity: isDimmed ? 0.3 : 1, 
+          y: 0,
+          backgroundColor: isActive && isMobile ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0)'
+        }}
       transition={{ duration: 0.4, delay: index * 0.05 }}
       onMouseEnter={() => !isMobile && setActiveId(data.id)}
       onMouseLeave={() => !isMobile && setActiveId(null)}

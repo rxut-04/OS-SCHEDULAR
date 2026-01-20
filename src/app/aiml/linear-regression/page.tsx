@@ -592,22 +592,22 @@ export default function LinearRegressionVisualizer() {
                 
                 <div className="p-3 rounded-xl bg-white/5 border border-white/5">
                   <div className="text-xs text-neutral-500 mb-1">MSE</div>
-                  <div className="text-lg font-bold font-mono text-white">
+                  <div className="text-lg font-bold font-mono text-white truncate">
                     {mse > 0 ? mse.toFixed(1) : '—'}
                   </div>
                 </div>
                 
-                <div className="p-3 rounded-xl bg-white/5 border border-white/5">
+                <div className="p-3 rounded-xl bg-white/5 border border-white/5 overflow-hidden">
                   <div className="text-xs text-neutral-500 mb-1">Slope (m)</div>
-                  <div className="text-lg font-bold font-mono text-cyan-400">
-                    {slope.toFixed(4)}
+                  <div className="text-lg font-bold font-mono text-cyan-400 truncate">
+                    {slope.toFixed(3)}
                   </div>
                 </div>
                 
-                <div className="p-3 rounded-xl bg-white/5 border border-white/5">
+                <div className="p-3 rounded-xl bg-white/5 border border-white/5 overflow-hidden">
                   <div className="text-xs text-neutral-500 mb-1">Intercept (b)</div>
-                  <div className="text-lg font-bold font-mono text-purple-400">
-                    {intercept.toFixed(2)}
+                  <div className="text-lg font-bold font-mono text-purple-400 truncate">
+                    {intercept.toFixed(1)}
                   </div>
                 </div>
 
