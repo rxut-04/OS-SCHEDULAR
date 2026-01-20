@@ -56,7 +56,7 @@ export default function DecisionTreeVisualizer() {
 
   const [dataset, setDataset] = useState<DataPoint[]>([]);
   const [tree, setTree] = useState<TreeNode | null>(null);
-  const [buildQueue, setBuildQueue] = useState<TreeNode[]>([]);
+  const [buildQueue, setBuildQueue] = useState<{node: TreeNode, data: DataPoint[], path: string[]}[]>([]);
   
   const [maxDepth, setMaxDepth] = useState(4);
   const [minSamples, setMinSamples] = useState(5);
@@ -213,7 +213,7 @@ export default function DecisionTreeVisualizer() {
     };
     
     setTree(rootNode);
-    setBuildQueue([{ ...rootNode, data } as TreeNode & { data: DataPoint[] }]);
+    setBuildQueue([{ node: rootNode, data: data, path: [] }]);
     setStatus('initializing');
     setCurrentStep(0);
     setPredictionPath([]);
@@ -229,17 +229,30 @@ export default function DecisionTreeVisualizer() {
     }
 
     setStatus('splitting');
-    const currentNode = buildQueue[0] as TreeNode & { data?: DataPoint[] };
-    const nodeData = currentNode.data || dataset.slice(0, currentNode.samples);
+    const current = buildQueue[0];
+    const { node: currentNode, data: nodeData, path } = current;
+    
+    const findNodeByPath = (root: TreeNode, nodePath: string[]): TreeNode | null => {
+      let node = root;
+      for (const dir of nodePath) {
+        if (dir === 'L' && node.left) node = node.left;
+        else if (dir === 'R' && node.right) node = node.right;
+        else return null;
+      }
+      return node;
+    };
     
     if (currentNode.depth >= maxDepth || nodeData.length < minSamples || calculateGini(nodeData.map(d => d.label)) === 0) {
-      currentNode.isLeaf = true;
-      currentNode.label = getMajorityClass(nodeData);
-      currentNode.isActive = false;
-      
       setTree(prev => {
         if (!prev) return prev;
-        return { ...prev };
+        const newTree = JSON.parse(JSON.stringify(prev)) as TreeNode;
+        const targetNode = path.length === 0 ? newTree : findNodeByPath(newTree, path);
+        if (targetNode) {
+          targetNode.isLeaf = true;
+          targetNode.label = getMajorityClass(nodeData);
+          targetNode.isActive = false;
+        }
+        return newTree;
       });
       
       setBuildQueue(prev => prev.slice(1));
@@ -256,9 +269,17 @@ export default function DecisionTreeVisualizer() {
     const bestSplit = findBestSplit(nodeData);
     
     if (!bestSplit) {
-      currentNode.isLeaf = true;
-      currentNode.label = getMajorityClass(nodeData);
-      currentNode.isActive = false;
+      setTree(prev => {
+        if (!prev) return prev;
+        const newTree = JSON.parse(JSON.stringify(prev)) as TreeNode;
+        const targetNode = path.length === 0 ? newTree : findNodeByPath(newTree, path);
+        if (targetNode) {
+          targetNode.isLeaf = true;
+          targetNode.label = getMajorityClass(nodeData);
+          targetNode.isActive = false;
+        }
+        return newTree;
+      });
       
       setBuildQueue(prev => prev.slice(1));
       setCurrentStep(prev => prev + 1);
@@ -271,19 +292,16 @@ export default function DecisionTreeVisualizer() {
       return;
     }
 
-    currentNode.featureIndex = bestSplit.featureIndex;
-    currentNode.threshold = bestSplit.threshold;
-    currentNode.isActive = false;
-
     const leftData = nodeData.filter(d => d.features[bestSplit.featureIndex] <= bestSplit.threshold);
     const rightData = nodeData.filter(d => d.features[bestSplit.featureIndex] > bestSplit.threshold);
 
-    const spread = Math.max(80, 200 / (currentNode.depth + 1));
+    const baseSpread = canvasSize.width * 0.35;
+    const spread = baseSpread / Math.pow(1.8, currentNode.depth);
     
-    const leftNode: TreeNode & { data: DataPoint[] } = {
+    const leftNode: TreeNode = {
       id: `${currentNode.id}-L`,
       x: currentNode.x - spread,
-      y: currentNode.y + 100,
+      y: currentNode.y + 110,
       featureIndex: null,
       threshold: null,
       label: null,
@@ -295,14 +313,13 @@ export default function DecisionTreeVisualizer() {
       depth: currentNode.depth + 1,
       distribution: getDistribution(leftData),
       isActive: true,
-      isHighlighted: false,
-      data: leftData
+      isHighlighted: false
     };
 
-    const rightNode: TreeNode & { data: DataPoint[] } = {
+    const rightNode: TreeNode = {
       id: `${currentNode.id}-R`,
       x: currentNode.x + spread,
-      y: currentNode.y + 100,
+      y: currentNode.y + 110,
       featureIndex: null,
       threshold: null,
       label: null,
@@ -314,19 +331,28 @@ export default function DecisionTreeVisualizer() {
       depth: currentNode.depth + 1,
       distribution: getDistribution(rightData),
       isActive: true,
-      isHighlighted: false,
-      data: rightData
+      isHighlighted: false
     };
-
-    currentNode.left = leftNode;
-    currentNode.right = rightNode;
 
     setTree(prev => {
       if (!prev) return prev;
-      return { ...prev };
+      const newTree = JSON.parse(JSON.stringify(prev)) as TreeNode;
+      const targetNode = path.length === 0 ? newTree : findNodeByPath(newTree, path);
+      if (targetNode) {
+        targetNode.featureIndex = bestSplit.featureIndex;
+        targetNode.threshold = bestSplit.threshold;
+        targetNode.isActive = false;
+        targetNode.left = { ...leftNode, x: targetNode.x - spread, y: targetNode.y + 110 };
+        targetNode.right = { ...rightNode, x: targetNode.x + spread, y: targetNode.y + 110 };
+      }
+      return newTree;
     });
 
-    setBuildQueue(prev => [...prev.slice(1), leftNode, rightNode]);
+    setBuildQueue(prev => [
+      ...prev.slice(1), 
+      { node: leftNode, data: leftData, path: [...path, 'L'] },
+      { node: rightNode, data: rightData, path: [...path, 'R'] }
+    ]);
     setCurrentStep(prev => prev + 1);
     
     setTreeStats(prev => ({
@@ -334,7 +360,7 @@ export default function DecisionTreeVisualizer() {
       nodes: prev.nodes + 2,
       depth: Math.max(prev.depth, currentNode.depth + 1)
     }));
-  }, [buildQueue, dataset, maxDepth, minSamples, findBestSplit]);
+  }, [buildQueue, maxDepth, minSamples, findBestSplit, canvasSize]);
 
   const runPrediction = useCallback(() => {
     if (!tree || status !== 'completed') return;
