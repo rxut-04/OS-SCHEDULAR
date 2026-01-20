@@ -126,47 +126,97 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Start Learning Card - Featured */}
-        <motion.div 
-          className="lg:col-span-2 relative min-h-[400px] h-auto rounded-2xl overflow-hidden border border-white/[0.08] group cursor-pointer"
-          whileHover={{ scale: 1.01 }}
-          transition={{ duration: 0.3 }}
-        >
-          <div className="absolute inset-0 z-0">
-             <MeshGradient
-                colors={["#000000", "#1e3a8a", "#000000", "#1e40af", "#172554"]}
-                speed={0.2}
-            />
-          </div>
-          
-          <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent z-10" />
-          
-          <div className="relative z-20 h-full p-8 flex flex-col justify-center max-w-xl pb-12">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-300 text-xs font-medium w-fit mb-6">
-              <Education size={16} />
-              <span>Recommended for you</span>
-            </div>
-            <h2 className="text-5xl font-bold text-white mb-4 leading-tight font-['Lexend:SemiBold',_sans-serif]">
-              Master CPU Scheduling
-            </h2>
-            <div className="text-blue-400 text-xl mb-6 font-light tracking-wide flex items-center gap-2">
-                <span className="w-8 h-[1px] bg-blue-400 inline-block"></span>
-                Interactive Visualization
-            </div>
-            <p className="text-neutral-300 mb-8 max-w-md font-light leading-relaxed">
-              Dive deep into FCFS, SJF, Round Robin and Priority scheduling with our 3D interactive visualizer.
-            </p>
-            <Link href="/modules">
-              <button className="px-8 py-3 bg-[#3B82F6] text-white rounded-lg font-bold flex items-center gap-3 hover:bg-[#2563EB] transition-all group-hover:pl-10 duration-300 shadow-[0_0_20px_rgba(59,130,246,0.5)]">
-                <Play size={20} />
-                <span>Start Learning</span>
-              </button>
-            </Link>
-          </div>
-        </motion.div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Start Learning Card - Featured */}
+          <Link href="/modules" className="block">
+            <motion.div 
+              className="relative min-h-[400px] h-auto rounded-2xl overflow-hidden border border-white/[0.08] group cursor-pointer"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="absolute inset-0 z-0">
+                <MeshGradient
+                    colors={["#000000", "#1e3a8a", "#000000", "#1e40af", "#172554"]}
+                    speed={0.2}
+                />
+              </div>
+              
+              <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent z-10" />
+              
+              <div className="relative z-20 h-full p-8 flex flex-col justify-center max-w-xl pb-12">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-300 text-xs font-medium w-fit mb-6">
+                  <Education size={16} />
+                  <span>Operating Systems</span>
+                </div>
+                <h2 className="text-4xl font-bold text-white mb-4 leading-tight font-['Lexend:SemiBold',_sans-serif]">
+                  Master CPU Scheduling
+                </h2>
+                <div className="text-blue-400 text-lg mb-4 font-light tracking-wide flex items-center gap-2">
+                    <span className="w-6 h-[1px] bg-blue-400 inline-block"></span>
+                    Interactive Visualization
+                </div>
+                <p className="text-neutral-300 mb-6 max-w-md font-light leading-relaxed text-sm">
+                  Dive deep into FCFS, SJF, Round Robin and Priority scheduling with our 3D interactive visualizer.
+                </p>
+                <button className="px-6 py-3 bg-[#3B82F6] text-white rounded-lg font-bold flex items-center gap-3 hover:bg-[#2563EB] transition-all group-hover:pl-8 duration-300 shadow-[0_0_20px_rgba(59,130,246,0.5)] w-fit">
+                  <Play size={18} />
+                  <span>Start Learning</span>
+                </button>
+              </div>
+            </motion.div>
+          </Link>
 
-        {/* Daily Quiz Card */}
+          {/* AI/ML Visualizer Card */}
+          <Link href="/modules?tab=aiml" className="block">
+            <motion.div 
+              className="relative min-h-[400px] h-auto rounded-2xl overflow-hidden border border-white/[0.08] group cursor-pointer"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="absolute inset-0 z-0">
+                <MeshGradient
+                    colors={["#000000", "#7c3aed", "#000000", "#a855f7", "#581c87"]}
+                    speed={0.15}
+                />
+              </div>
+              
+              <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent z-10" />
+              
+              <div className="absolute top-4 right-4 z-20">
+                <motion.div 
+                  className="flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-medium"
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
+                  <span>NEW</span>
+                </motion.div>
+              </div>
+              
+              <div className="relative z-20 h-full p-8 flex flex-col justify-center max-w-xl pb-12">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-medium w-fit mb-6">
+                  <ChartLineData size={16} />
+                  <span>Machine Learning</span>
+                </div>
+                <h2 className="text-4xl font-bold text-white mb-4 leading-tight font-['Lexend:SemiBold',_sans-serif]">
+                  AI/ML Visualizer
+                </h2>
+                <div className="text-purple-400 text-lg mb-4 font-light tracking-wide flex items-center gap-2">
+                    <span className="w-6 h-[1px] bg-purple-400 inline-block"></span>
+                    Learn by Visualization
+                </div>
+                <p className="text-neutral-300 mb-6 max-w-md font-light leading-relaxed text-sm">
+                  Explore K-Means, Neural Networks, Decision Trees and more with stunning interactive visualizations.
+                </p>
+                <button className="px-6 py-3 bg-[#A855F7] text-white rounded-lg font-bold flex items-center gap-3 hover:bg-[#9333EA] transition-all group-hover:pl-8 duration-300 shadow-[0_0_20px_rgba(168,85,247,0.5)] w-fit">
+                  <Play size={18} />
+                  <span>Explore AI/ML</span>
+                </button>
+              </div>
+            </motion.div>
+          </Link>
+
+          {/* Daily Quiz Card */}
         <div className="bg-white/5 backdrop-blur-xl border border-white/[0.08] p-6 rounded-2xl flex flex-col hover:bg-white/10 transition-colors duration-300">
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-lg font-bold text-neutral-50 flex items-center gap-2">
