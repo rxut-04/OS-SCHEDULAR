@@ -311,12 +311,14 @@ export default function KineticModulesList() {
                 }`}
               >
                 {/* Find the active image */}
-                <Image
-                  src={MODULES.find((t) => t.id === activeId)?.image || ''}
-                  alt="Preview"
-                  fill
-                  className="h-full w-full object-cover"
-                />
+                {MODULES.find((t) => t.id === activeId)?.image && (
+                  <Image
+                    src={MODULES.find((t) => t.id === activeId)?.image || '/assets/models/placeholder.png'}
+                    alt="Preview"
+                    fill
+                    className="h-full w-full object-cover"
+                  />
+                )}
                 
                 {/* Overlay Metadata */}
                 <div className="absolute bottom-0 w-full bg-gradient-to-t from-black/80 to-transparent p-4">
