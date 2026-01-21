@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Play,
   Pause,
@@ -11,14 +11,10 @@ import {
   Activity,
   Settings,
   Cpu,
-  HardDrive,
   Plus,
   SkipForward,
-  FastForward,
   Clock,
-  Layers,
-  ArrowRight,
-  AlertCircle
+  Layers
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -35,8 +31,6 @@ interface Process {
   ioTime: number;
   remainingIo: number;
   state: ProcessState;
-  x: number;
-  y: number;
   targetX: number;
   targetY: number;
 }
@@ -55,11 +49,40 @@ const STATE_INFO: Record<ProcessState, { name: string; color: string }> = {
   'terminated': { name: 'Terminated', color: '#6B7280' }
 };
 
+const queuePositions = {
+  jobQueue: { x: 80, y: 100, width: 140, height: 180 },
+  readyQueue: { x: 280, y: 100, width: 140, height: 180 },
+  cpu: { x: 480, y: 130, width: 100, height: 120 },
+  ioQueue: { x: 480, y: 320, width: 140, height: 140 },
+  waitingQueue: { x: 280, y: 320, width: 140, height: 140 },
+  terminated: { x: 680, y: 130, width: 140, height: 120 }
+};
+
+function getQueuePosition(state: ProcessState, index: number): { x: number; y: number } {
+  const pos = state === 'new' ? queuePositions.jobQueue
+    : state === 'ready' ? queuePositions.readyQueue
+    : state === 'running' ? queuePositions.cpu
+    : state === 'io' ? queuePositions.ioQueue
+    : state === 'waiting' ? queuePositions.waitingQueue
+    : queuePositions.terminated;
+
+  if (state === 'running') {
+    return { x: pos.x + pos.width / 2 - 25, y: pos.y + pos.height / 2 - 15 };
+  }
+
+  const col = index % 2;
+  const row = Math.floor(index / 2);
+  return {
+    x: pos.x + 15 + col * 60,
+    y: pos.y + 30 + row * 35
+  };
+}
+
 export default function SchedulingQueuesVisualizer() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const processPositionsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
+  const processesRef = useRef<Process[]>([]);
 
   const [processes, setProcesses] = useState<Process[]>([]);
   const [isRunning, setIsRunning] = useState(false);
@@ -69,18 +92,11 @@ export default function SchedulingQueuesVisualizer() {
   const [cpuUtilization, setCpuUtilization] = useState(0);
   const [message, setMessage] = useState('System initialized - Add processes to begin');
   const [processCounter, setProcessCounter] = useState(1);
-  const [timeQuantum] = useState(3);
-
   const [canvasSize, setCanvasSize] = useState({ width: 950, height: 600 });
 
-  const queuePositions = {
-    jobQueue: { x: 80, y: 100, width: 140, height: 180 },
-    readyQueue: { x: 280, y: 100, width: 140, height: 180 },
-    cpu: { x: 480, y: 130, width: 100, height: 120 },
-    ioQueue: { x: 480, y: 320, width: 140, height: 140 },
-    waitingQueue: { x: 280, y: 320, width: 140, height: 140 },
-    terminated: { x: 680, y: 130, width: 140, height: 120 }
-  };
+  useEffect(() => {
+    processesRef.current = processes;
+  }, [processes]);
 
   useEffect(() => {
     const updateSize = () => {
@@ -102,8 +118,10 @@ export default function SchedulingQueuesVisualizer() {
     const color = PROCESS_COLORS[(processCounter - 1) % PROCESS_COLORS.length];
     const pos = queuePositions.jobQueue;
     
-    const jobQueueProcesses = processes.filter(p => p.state === 'new');
+    const jobQueueProcesses = processesRef.current.filter(p => p.state === 'new');
     const yOffset = jobQueueProcesses.length * 35;
+    const burstTime = Math.floor(Math.random() * 6) + 3;
+    const ioTime = Math.floor(Math.random() * 3) + 1;
 
     const newProcess: Process = {
       id,
@@ -111,59 +129,37 @@ export default function SchedulingQueuesVisualizer() {
       color,
       priority: Math.floor(Math.random() * 5) + 1,
       arrivalTime: time,
-      burstTime: Math.floor(Math.random() * 6) + 3,
-      remainingBurst: Math.floor(Math.random() * 6) + 3,
-      ioTime: Math.floor(Math.random() * 3) + 1,
-      remainingIo: Math.floor(Math.random() * 3) + 1,
+      burstTime,
+      remainingBurst: burstTime,
+      ioTime,
+      remainingIo: ioTime,
       state: 'new',
-      x: pos.x + 20,
-      y: pos.y + 30 + yOffset,
       targetX: pos.x + 20,
       targetY: pos.y + 30 + yOffset
     };
 
-    newProcess.remainingBurst = newProcess.burstTime;
-    newProcess.remainingIo = newProcess.ioTime;
-
+    processPositionsRef.current.set(id, { x: newProcess.targetX, y: newProcess.targetY });
     setProcesses(prev => [...prev, newProcess]);
     setProcessCounter(prev => prev + 1);
     setMessage(`Process ${id} submitted to Job Queue`);
-  }, [processCounter, time, processes]);
-
-  const getQueuePosition = (state: ProcessState, index: number): { x: number; y: number } => {
-    const pos = state === 'new' ? queuePositions.jobQueue
-      : state === 'ready' ? queuePositions.readyQueue
-      : state === 'running' ? queuePositions.cpu
-      : state === 'io' ? queuePositions.ioQueue
-      : state === 'waiting' ? queuePositions.waitingQueue
-      : queuePositions.terminated;
-
-    if (state === 'running') {
-      return { x: pos.x + pos.width / 2 - 25, y: pos.y + pos.height / 2 - 15 };
-    }
-
-    const col = index % 2;
-    const row = Math.floor(index / 2);
-    return {
-      x: pos.x + 15 + col * 60,
-      y: pos.y + 30 + row * 35
-    };
-  };
+  }, [processCounter, time]);
 
   const simulationStep = useCallback(() => {
+    let newMessage = '';
+    let newContextSwitches = 0;
+
     setProcesses(prev => {
-      let updated = [...prev];
-      let newContextSwitches = 0;
+      const updated = prev.map(p => ({ ...p }));
 
       const jobQueue = updated.filter(p => p.state === 'new');
       if (jobQueue.length > 0 && Math.random() > 0.5) {
         const selected = jobQueue[0];
         selected.state = 'ready';
-        const readyCount = updated.filter(p => p.state === 'ready').length - 1;
+        const readyCount = updated.filter(p => p.state === 'ready' && p.id !== selected.id).length;
         const newPos = getQueuePosition('ready', readyCount);
         selected.targetX = newPos.x;
         selected.targetY = newPos.y;
-        setMessage(`${selected.name} admitted to Ready Queue (Long-term scheduler)`);
+        newMessage = `${selected.name} admitted to Ready Queue (Long-term scheduler)`;
       }
 
       const running = updated.find(p => p.state === 'running');
@@ -172,20 +168,20 @@ export default function SchedulingQueuesVisualizer() {
         
         if (running.remainingBurst <= 0) {
           running.state = 'terminated';
-          const termCount = updated.filter(p => p.state === 'terminated').length - 1;
+          const termCount = updated.filter(p => p.state === 'terminated' && p.id !== running.id).length;
           const newPos = getQueuePosition('terminated', termCount);
           running.targetX = newPos.x;
           running.targetY = newPos.y;
-          setMessage(`${running.name} terminated - Resources released`);
+          newMessage = `${running.name} terminated - Resources released`;
           newContextSwitches++;
         } else if (running.remainingBurst === Math.floor(running.burstTime / 2) && running.ioTime > 0) {
           running.state = 'io';
           running.remainingIo = running.ioTime;
-          const ioCount = updated.filter(p => p.state === 'io').length - 1;
+          const ioCount = updated.filter(p => p.state === 'io' && p.id !== running.id).length;
           const newPos = getQueuePosition('io', ioCount);
           running.targetX = newPos.x;
           running.targetY = newPos.y;
-          setMessage(`${running.name} requested I/O - Moved to Device Queue`);
+          newMessage = `${running.name} requested I/O - Moved to Device Queue`;
           newContextSwitches++;
         }
       }
@@ -199,7 +195,7 @@ export default function SchedulingQueuesVisualizer() {
           const newPos = getQueuePosition('ready', readyCount);
           p.targetX = newPos.x;
           p.targetY = newPos.y;
-          setMessage(`${p.name} I/O completed - Back to Ready Queue`);
+          newMessage = `${p.name} I/O completed - Back to Ready Queue`;
         }
       });
 
@@ -211,7 +207,7 @@ export default function SchedulingQueuesVisualizer() {
           const newPos = getQueuePosition('running', 0);
           selected.targetX = newPos.x;
           selected.targetY = newPos.y;
-          setMessage(`${selected.name} dispatched to CPU (Short-term scheduler)`);
+          newMessage = `${selected.name} dispatched to CPU (Short-term scheduler)`;
           newContextSwitches++;
         }
       }
@@ -237,13 +233,15 @@ export default function SchedulingQueuesVisualizer() {
         }
       });
 
-      if (newContextSwitches > 0) {
-        setContextSwitches(c => c + newContextSwitches);
-      }
-
       return updated;
     });
 
+    if (newMessage) {
+      setMessage(newMessage);
+    }
+    if (newContextSwitches > 0) {
+      setContextSwitches(c => c + newContextSwitches);
+    }
     setTime(t => t + 1);
   }, []);
 
@@ -262,33 +260,29 @@ export default function SchedulingQueuesVisualizer() {
   useEffect(() => {
     const running = processes.find(p => p.state === 'running');
     const active = processes.filter(p => p.state !== 'terminated').length;
-    if (active > 0) {
-      setCpuUtilization(running ? 100 : 0);
-    } else {
-      setCpuUtilization(0);
-    }
+    setCpuUtilization(active > 0 && running ? 100 : 0);
   }, [processes]);
 
-    useEffect(() => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-      let frameId: number;
+    let frameId: number;
 
-      const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-      const render = () => {
-        ctx.fillStyle = '#0B0F14';
-        ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
+    const render = () => {
+      ctx.fillStyle = '#0B0F14';
+      ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
 
-        processes.forEach(p => {
-          const currentPos = processPositionsRef.current.get(p.id) || { x: p.x, y: p.y };
-          const newX = lerp(currentPos.x, p.targetX, 0.15);
-          const newY = lerp(currentPos.y, p.targetY, 0.15);
-          processPositionsRef.current.set(p.id, { x: newX, y: newY });
-        });
+      processesRef.current.forEach(p => {
+        const currentPos = processPositionsRef.current.get(p.id) || { x: p.targetX, y: p.targetY };
+        const newX = lerp(currentPos.x, p.targetX, 0.12);
+        const newY = lerp(currentPos.y, p.targetY, 0.12);
+        processPositionsRef.current.set(p.id, { x: newX, y: newY });
+      });
 
       const drawQueue = (name: string, pos: { x: number; y: number; width: number; height: number }, color: string, icon?: string) => {
         ctx.fillStyle = color + '15';
@@ -318,7 +312,7 @@ export default function SchedulingQueuesVisualizer() {
       drawQueue('TERMINATED', queuePositions.terminated, '#6B7280', '✓');
 
       const cpuPos = queuePositions.cpu;
-      const running = processes.find(p => p.state === 'running');
+      const running = processesRef.current.find(p => p.state === 'running');
       
       ctx.fillStyle = running ? '#3B82F620' : '#3B82F610';
       ctx.strokeStyle = running ? '#3B82F6' : '#3B82F650';
@@ -404,45 +398,45 @@ export default function SchedulingQueuesVisualizer() {
         '#10B981', 'I/O done'
       );
 
-        processes.forEach(p => {
-          const pos = processPositionsRef.current.get(p.id) || { x: p.x, y: p.y };
-          
-          if (p.state === 'terminated') {
-            ctx.globalAlpha = 0.5;
-          }
+      processesRef.current.forEach(p => {
+        const pos = processPositionsRef.current.get(p.id) || { x: p.targetX, y: p.targetY };
+        
+        if (p.state === 'terminated') {
+          ctx.globalAlpha = 0.5;
+        }
 
-          ctx.fillStyle = p.color + '40';
-          ctx.strokeStyle = p.color;
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.roundRect(pos.x, pos.y, 50, 28, 6);
-          ctx.fill();
+        ctx.fillStyle = p.color + '40';
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(pos.x, pos.y, 50, 28, 6);
+        ctx.fill();
+        ctx.stroke();
+
+        if (p.state === 'running') {
+          ctx.shadowColor = p.color;
+          ctx.shadowBlur = 12;
           ctx.stroke();
+          ctx.shadowBlur = 0;
+        }
 
-          if (p.state === 'running') {
-            ctx.shadowColor = p.color;
-            ctx.shadowBlur = 12;
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-          }
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(p.name, pos.x + 25, pos.y + 13);
 
-          ctx.fillStyle = '#FFFFFF';
-          ctx.font = 'bold 10px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText(p.name, pos.x + 25, pos.y + 13);
+        ctx.fillStyle = 'rgba(255,255,255,0.6)';
+        ctx.font = '8px sans-serif';
+        if (p.state === 'running') {
+          ctx.fillText(`${p.remainingBurst}/${p.burstTime}`, pos.x + 25, pos.y + 23);
+        } else if (p.state === 'io') {
+          ctx.fillText(`IO:${p.remainingIo}`, pos.x + 25, pos.y + 23);
+        } else {
+          ctx.fillText(`B:${p.burstTime}`, pos.x + 25, pos.y + 23);
+        }
 
-          ctx.fillStyle = 'rgba(255,255,255,0.6)';
-          ctx.font = '8px sans-serif';
-          if (p.state === 'running') {
-            ctx.fillText(`${p.remainingBurst}/${p.burstTime}`, pos.x + 25, pos.y + 23);
-          } else if (p.state === 'io') {
-            ctx.fillText(`IO:${p.remainingIo}`, pos.x + 25, pos.y + 23);
-          } else {
-            ctx.fillText(`B:${p.burstTime}`, pos.x + 25, pos.y + 23);
-          }
-
-          ctx.globalAlpha = 1;
-        });
+        ctx.globalAlpha = 1;
+      });
 
       const legendY = 480;
       ctx.fillStyle = 'rgba(255,255,255,0.05)';
@@ -482,7 +476,7 @@ export default function SchedulingQueuesVisualizer() {
 
     render();
     return () => cancelAnimationFrame(frameId);
-  }, [canvasSize, processes]);
+  }, [canvasSize]);
 
   const resetSimulation = () => {
     setProcesses([]);
@@ -492,6 +486,7 @@ export default function SchedulingQueuesVisualizer() {
     setIsRunning(false);
     setMessage('System reset - Add processes to begin');
     processPositionsRef.current.clear();
+    processesRef.current = [];
   };
 
   const stepSimulation = () => {
