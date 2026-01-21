@@ -1,9 +1,10 @@
 [build]
   base = "."
-  command = "npm ci --include=optional && npm run build"
+  command = "npm ci --include=optional && npm install --no-save lightningcss-linux-x64-gnu@1.30.2 @tailwindcss/oxide-linux-x64-gnu@4.1.18 && node scripts/install-lightningcss.js && npm run build"
   publish = ".next"
 
 [build.environment]
   NODE_VERSION = "22"
   NPM_CONFIG_OPTIONAL = "true"
   NPM_CONFIG_IGNORE_SCRIPTS = "false"
+  NEXT_PRIVATE_SKIP_TURBO = "1"

@@ -13,27 +13,35 @@ function installLinuxBinary(pkg) {
 
 function ensureBinaryPresent() {
   const projectRoot = path.resolve(__dirname, "..");
-  const expectedBinary = path.join(
-    projectRoot,
-    "node_modules",
-    "lightningcss",
-    "lightningcss.linux-x64-gnu.node"
-  );
-  if (fs.existsSync(expectedBinary)) {
-    log("Binary already present.");
-    return;
-  }
+  
+  // Check both root and nested locations
+  const locations = [
+    path.join(projectRoot, "node_modules", "lightningcss"),
+    path.join(projectRoot, "node_modules", "@tailwindcss", "node", "node_modules", "lightningcss"),
+  ];
 
   const sourceBinary = findBinary(
     path.join(projectRoot, "node_modules", "lightningcss-linux-x64-gnu"),
     /lightningcss\.linux-x64-gnu\.node$/
   );
+  
   if (!sourceBinary) {
     throw new Error("Linux binary package installed, but binary not found.");
   }
 
-  fs.copyFileSync(sourceBinary, expectedBinary);
-  log(`Copied Linux binary into lightningcss package from ${sourceBinary}.`);
+  for (const location of locations) {
+    const expectedBinary = path.join(location, "lightningcss.linux-x64-gnu.node");
+    if (fs.existsSync(location) && !fs.existsSync(expectedBinary)) {
+      // Ensure directory exists
+      const nodeDir = path.join(location, "node");
+      if (!fs.existsSync(nodeDir)) {
+        fs.mkdirSync(nodeDir, { recursive: true });
+      }
+      const targetPath = path.join(nodeDir, "lightningcss.linux-x64-gnu.node");
+      fs.copyFileSync(sourceBinary, targetPath);
+      log(`Copied Linux binary to ${targetPath}.`);
+    }
+  }
 }
 
 function ensureTailwindOxidePresent() {
@@ -85,11 +93,7 @@ function findBinary(rootDir, pattern) {
 }
 
 function main() {
-  if (process.env.NETLIFY === "true") {
-    log("Skipping install on Netlify.");
-    return;
-  }
-
+  // Always run on Linux x64 (including Netlify)
   if (process.platform !== "linux" || process.arch !== "x64") {
     log("Skipping install (not Linux x64).");
     return;
