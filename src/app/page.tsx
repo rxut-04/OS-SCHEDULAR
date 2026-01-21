@@ -45,7 +45,7 @@ const CATEGORIES = [
     algorithms: ['First Fit', 'Best Fit', 'Worst Fit', 'Next Fit'],
     href: '/memory-management',
     color: '#10b981',
-    available: false,
+    available: true,
   },
   {
     id: 'page-replacement',
