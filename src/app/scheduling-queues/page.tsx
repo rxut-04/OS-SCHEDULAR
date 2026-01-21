@@ -59,6 +59,7 @@ export default function SchedulingQueuesVisualizer() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const processPositionsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
 
   const [processes, setProcesses] = useState<Process[]>([]);
   const [isRunning, setIsRunning] = useState(false);
@@ -268,25 +269,26 @@ export default function SchedulingQueuesVisualizer() {
     }
   }, [processes]);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    useEffect(() => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
 
-    let frameId: number;
+      let frameId: number;
 
-    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+      const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-    const render = () => {
-      ctx.fillStyle = '#0B0F14';
-      ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
+      const render = () => {
+        ctx.fillStyle = '#0B0F14';
+        ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
 
-      setProcesses(prev => prev.map(p => ({
-        ...p,
-        x: lerp(p.x, p.targetX, 0.15),
-        y: lerp(p.y, p.targetY, 0.15)
-      })));
+        processes.forEach(p => {
+          const currentPos = processPositionsRef.current.get(p.id) || { x: p.x, y: p.y };
+          const newX = lerp(currentPos.x, p.targetX, 0.15);
+          const newY = lerp(currentPos.y, p.targetY, 0.15);
+          processPositionsRef.current.set(p.id, { x: newX, y: newY });
+        });
 
       const drawQueue = (name: string, pos: { x: number; y: number; width: number; height: number }, color: string, icon?: string) => {
         ctx.fillStyle = color + '15';
@@ -402,43 +404,45 @@ export default function SchedulingQueuesVisualizer() {
         '#10B981', 'I/O done'
       );
 
-      processes.forEach(p => {
-        if (p.state === 'terminated') {
-          ctx.globalAlpha = 0.5;
-        }
+        processes.forEach(p => {
+          const pos = processPositionsRef.current.get(p.id) || { x: p.x, y: p.y };
+          
+          if (p.state === 'terminated') {
+            ctx.globalAlpha = 0.5;
+          }
 
-        ctx.fillStyle = p.color + '40';
-        ctx.strokeStyle = p.color;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.roundRect(p.x, p.y, 50, 28, 6);
-        ctx.fill();
-        ctx.stroke();
-
-        if (p.state === 'running') {
-          ctx.shadowColor = p.color;
-          ctx.shadowBlur = 12;
+          ctx.fillStyle = p.color + '40';
+          ctx.strokeStyle = p.color;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.roundRect(pos.x, pos.y, 50, 28, 6);
+          ctx.fill();
           ctx.stroke();
-          ctx.shadowBlur = 0;
-        }
 
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 10px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(p.name, p.x + 25, p.y + 13);
+          if (p.state === 'running') {
+            ctx.shadowColor = p.color;
+            ctx.shadowBlur = 12;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+          }
 
-        ctx.fillStyle = 'rgba(255,255,255,0.6)';
-        ctx.font = '8px sans-serif';
-        if (p.state === 'running') {
-          ctx.fillText(`${p.remainingBurst}/${p.burstTime}`, p.x + 25, p.y + 23);
-        } else if (p.state === 'io') {
-          ctx.fillText(`IO:${p.remainingIo}`, p.x + 25, p.y + 23);
-        } else {
-          ctx.fillText(`B:${p.burstTime}`, p.x + 25, p.y + 23);
-        }
+          ctx.fillStyle = '#FFFFFF';
+          ctx.font = 'bold 10px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(p.name, pos.x + 25, pos.y + 13);
 
-        ctx.globalAlpha = 1;
-      });
+          ctx.fillStyle = 'rgba(255,255,255,0.6)';
+          ctx.font = '8px sans-serif';
+          if (p.state === 'running') {
+            ctx.fillText(`${p.remainingBurst}/${p.burstTime}`, pos.x + 25, pos.y + 23);
+          } else if (p.state === 'io') {
+            ctx.fillText(`IO:${p.remainingIo}`, pos.x + 25, pos.y + 23);
+          } else {
+            ctx.fillText(`B:${p.burstTime}`, pos.x + 25, pos.y + 23);
+          }
+
+          ctx.globalAlpha = 1;
+        });
 
       const legendY = 480;
       ctx.fillStyle = 'rgba(255,255,255,0.05)';
@@ -487,6 +491,7 @@ export default function SchedulingQueuesVisualizer() {
     setProcessCounter(1);
     setIsRunning(false);
     setMessage('System reset - Add processes to begin');
+    processPositionsRef.current.clear();
   };
 
   const stepSimulation = () => {
