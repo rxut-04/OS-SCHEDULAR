@@ -15,7 +15,11 @@ import {
   Plus,
   Minus,
   Eye,
-  EyeOff
+  EyeOff,
+  ZoomIn,
+  ZoomOut,
+  Move,
+  Maximize2
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -98,8 +102,13 @@ export default function NeuralNetworkVisualizer() {
   const [showWeights, setShowWeights] = useState(false);
   const [showBias, setShowBias] = useState(false);
   const [selectedNeuron, setSelectedNeuron] = useState<Neuron | null>(null);
-  
+    
   const [canvasSize, setCanvasSize] = useState({ width: 900, height: 600 });
+  
+  const [zoom, setZoom] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
 
   const activate = useCallback((x: number, fn: ActivationFn): number => {
     switch (fn) {
@@ -350,25 +359,30 @@ export default function NeuralNetworkVisualizer() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const render = () => {
-      ctx.fillStyle = '#0B0F14';
-      ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
+      const render = () => {
+        ctx.fillStyle = '#0B0F14';
+        ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
 
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
-      ctx.lineWidth = 1;
-      const gridSize = 30;
-      for (let x = 0; x < canvasSize.width; x += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvasSize.height);
-        ctx.stroke();
-      }
-      for (let y = 0; y < canvasSize.height; y += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvasSize.width, y);
-        ctx.stroke();
-      }
+        ctx.save();
+        ctx.translate(canvasSize.width / 2 + panOffset.x, canvasSize.height / 2 + panOffset.y);
+        ctx.scale(zoom, zoom);
+        ctx.translate(-canvasSize.width / 2, -canvasSize.height / 2);
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
+        ctx.lineWidth = 1 / zoom;
+        const gridSize = 30;
+        for (let x = 0; x < canvasSize.width; x += gridSize) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, canvasSize.height);
+          ctx.stroke();
+        }
+        for (let y = 0; y < canvasSize.height; y += gridSize) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(canvasSize.width, y);
+          ctx.stroke();
+        }
 
       connections.forEach(conn => {
         const fromNeuron = neurons.find(n => n.id === conn.from);
@@ -478,21 +492,23 @@ export default function NeuralNetworkVisualizer() {
       ctx.font = '11px sans-serif';
       ctx.textAlign = 'center';
       
-      networkStructure.forEach((_, idx) => {
-        const x = layerSpacing * (idx + 1);
-        ctx.fillText(labels[idx], x, 25);
-      });
+        networkStructure.forEach((_, idx) => {
+          const x = layerSpacing * (idx + 1);
+          ctx.fillText(labels[idx], x, 25);
+        });
+        
+        ctx.restore();
 
-      animationRef.current = requestAnimationFrame(render);
-    };
+        animationRef.current = requestAnimationFrame(render);
+      };
 
-    render();
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [neurons, connections, signals, canvasSize, networkStructure, showWeights, showBias, selectedNeuron]);
+      render();
+      return () => {
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+        }
+      };
+    }, [neurons, connections, signals, canvasSize, networkStructure, showWeights, showBias, selectedNeuron, zoom, panOffset]);
 
   useEffect(() => {
     const lossCanvas = lossCanvasRef.current;
@@ -556,6 +572,37 @@ export default function NeuralNetworkVisualizer() {
     });
     
     setSelectedNeuron(clicked || null);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!e.shiftKey) {
+      setIsPanning(true);
+      setLastMousePos({ x: e.clientX, y: e.clientY });
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (isPanning) {
+      const dx = e.clientX - lastMousePos.x;
+      const dy = e.clientY - lastMousePos.y;
+      setPanOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+      setLastMousePos({ x: e.clientX, y: e.clientY });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsPanning(false);
+  };
+
+  const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    setZoom(prev => Math.min(5, Math.max(0.3, prev * delta)));
+  };
+
+  const resetView = () => {
+    setZoom(1);
+    setPanOffset({ x: 0, y: 0 });
   };
 
   const handleReset = () => {
@@ -656,12 +703,50 @@ export default function NeuralNetworkVisualizer() {
             style={{ minHeight: '550px' }}
           >
             <canvas
-              ref={canvasRef}
-              width={canvasSize.width}
-              height={canvasSize.height}
-              onClick={handleCanvasClick}
-              className="w-full h-full cursor-pointer"
-            />
+                ref={canvasRef}
+                width={canvasSize.width}
+                height={canvasSize.height}
+                onClick={handleCanvasClick}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onWheel={handleWheel}
+                className={`w-full h-full ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
+              />
+              
+              <div className="absolute top-4 left-4 flex items-center gap-2">
+                <div className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-black/60 backdrop-blur-xl border border-white/10">
+                  <button
+                    onClick={() => setZoom(prev => Math.min(5, prev * 1.2))}
+                    className="p-1.5 rounded text-neutral-400 hover:text-white transition-colors"
+                    title="Zoom In"
+                  >
+                    <ZoomIn size={14} />
+                  </button>
+                  <button
+                    onClick={() => setZoom(prev => Math.max(0.3, prev / 1.2))}
+                    className="p-1.5 rounded text-neutral-400 hover:text-white transition-colors"
+                    title="Zoom Out"
+                  >
+                    <ZoomOut size={14} />
+                  </button>
+                  <button
+                    onClick={resetView}
+                    className="p-1.5 rounded text-neutral-400 hover:text-white transition-colors"
+                    title="Reset View"
+                  >
+                    <Maximize2 size={14} />
+                  </button>
+                </div>
+                <div className="px-2 py-1.5 rounded-lg bg-black/60 backdrop-blur-xl border border-white/10">
+                  <span className="text-xs text-neutral-400">{Math.round(zoom * 100)}%</span>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-xl border border-white/10">
+                  <Move size={14} className="text-purple-400" />
+                  <span className="text-xs text-neutral-300">Drag to pan</span>
+                </div>
+              </div>
             
             <AnimatePresence>
               {selectedNeuron && (

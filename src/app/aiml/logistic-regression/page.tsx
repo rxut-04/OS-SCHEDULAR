@@ -13,7 +13,12 @@ import {
   Target,
   Settings,
   Eye,
-  EyeOff
+  EyeOff,
+  ZoomIn,
+  ZoomOut,
+  Move,
+  Maximize2,
+  MousePointer2
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -54,6 +59,12 @@ export default function LogisticRegressionVisualizer() {
   const [lossHistory, setLossHistory] = useState<LossPoint[]>([]);
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
   const [confusion, setConfusion] = useState({ tp: 0, tn: 0, fp: 0, fn: 0 });
+  
+  const [zoom, setZoom] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
+  const [interactionMode, setInteractionMode] = useState<'point' | 'pan'>('point');
 
   const sigmoid = (z: number): number => 1 / (1 + Math.exp(-Math.max(-500, Math.min(500, z))));
 
@@ -232,11 +243,16 @@ export default function LogisticRegressionVisualizer() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const render = () => {
-      ctx.fillStyle = '#0B0F14';
-      ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
+      const render = () => {
+        ctx.fillStyle = '#0B0F14';
+        ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
 
-      if (showHeatmap) {
+        ctx.save();
+        ctx.translate(canvasSize.width / 2 + panOffset.x, canvasSize.height / 2 + panOffset.y);
+        ctx.scale(zoom, zoom);
+        ctx.translate(-canvasSize.width / 2, -canvasSize.height / 2);
+
+        if (showHeatmap) {
         const resolution = 20;
         const cellWidth = canvasSize.width / resolution;
         const cellHeight = canvasSize.height / resolution;
@@ -329,18 +345,20 @@ export default function LogisticRegressionVisualizer() {
         ctx.arc(point.x, point.y, 6, 0, Math.PI * 2);
         ctx.fill();
         ctx.shadowBlur = 0;
-      });
+        });
+        
+        ctx.restore();
 
-      animationRef.current = requestAnimationFrame(render);
-    };
+        animationRef.current = requestAnimationFrame(render);
+      };
 
-    render();
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [points, weights, canvasSize, showHeatmap, status, iteration, threshold]);
+      render();
+      return () => {
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+        }
+      };
+    }, [points, weights, canvasSize, showHeatmap, status, iteration, threshold, zoom, panOffset]);
 
   useEffect(() => {
     const lossCanvas = lossCanvasRef.current;
@@ -422,6 +440,37 @@ export default function LogisticRegressionVisualizer() {
     setPoints(prev => [...prev, { id: prev.length, x, y, label }]);
   };
 
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (interactionMode === 'pan') {
+      setIsPanning(true);
+      setLastMousePos({ x: e.clientX, y: e.clientY });
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (isPanning && interactionMode === 'pan') {
+      const dx = e.clientX - lastMousePos.x;
+      const dy = e.clientY - lastMousePos.y;
+      setPanOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+      setLastMousePos({ x: e.clientX, y: e.clientY });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsPanning(false);
+  };
+
+  const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    setZoom(prev => Math.min(5, Math.max(0.5, prev * delta)));
+  };
+
+  const resetView = () => {
+    setZoom(1);
+    setPanOffset({ x: 0, y: 0 });
+  };
+
   const getStatusText = () => {
     switch (status) {
       case 'idle': return 'Ready to start training';
@@ -486,46 +535,91 @@ export default function LogisticRegressionVisualizer() {
             style={{ minHeight: '600px' }}
           >
             <canvas
-              ref={canvasRef}
-              width={canvasSize.width}
-              height={canvasSize.height}
-              onClick={handleCanvasClick}
-              className="w-full h-full cursor-crosshair"
-            />
-            
-            <AnimatePresence>
-              <motion.div
-                key={status}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute bottom-4 left-4 right-4"
-              >
-                <div className={`px-4 py-3 rounded-xl backdrop-blur-xl border ${
-                  status === 'converged' 
-                    ? 'bg-green-500/10 border-green-500/30' 
-                    : 'bg-white/5 border-white/10'
-                }`}>
-                  <div className="flex items-center gap-3">
-                    {status === 'converged' ? (
-                      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                    ) : status === 'training' ? (
-                      <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
-                    ) : (
-                      <div className="w-2 h-2 rounded-full bg-neutral-500" />
-                    )}
-                    <span className={`text-sm ${status === 'converged' ? 'text-green-400' : 'text-neutral-300'}`}>
-                      {getStatusText()}
-                    </span>
+                ref={canvasRef}
+                width={canvasSize.width}
+                height={canvasSize.height}
+                onClick={interactionMode === 'point' ? handleCanvasClick : undefined}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onWheel={handleWheel}
+                className={`w-full h-full ${interactionMode === 'pan' ? (isPanning ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-crosshair'}`}
+              />
+              
+              <AnimatePresence>
+                <motion.div
+                  key={status}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute bottom-4 left-4 right-4"
+                >
+                  <div className={`px-4 py-3 rounded-xl backdrop-blur-xl border ${
+                    status === 'converged' 
+                      ? 'bg-green-500/10 border-green-500/30' 
+                      : 'bg-white/5 border-white/10'
+                  }`}>
+                    <div className="flex items-center gap-3">
+                      {status === 'converged' ? (
+                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                      ) : status === 'training' ? (
+                        <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+                      ) : (
+                        <div className="w-2 h-2 rounded-full bg-neutral-500" />
+                      )}
+                      <span className={`text-sm ${status === 'converged' ? 'text-green-400' : 'text-neutral-300'}`}>
+                        {getStatusText()}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            </AnimatePresence>
+                </motion.div>
+              </AnimatePresence>
 
-            <div className="absolute top-4 left-4 text-xs text-neutral-500">
-              Click to add points (predicted class)
-            </div>
-          </motion.div>
+              <div className="absolute top-4 left-4 flex items-center gap-2">
+                <div className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-black/60 backdrop-blur-xl border border-white/10">
+                  <button
+                    onClick={() => setInteractionMode('point')}
+                    className={`p-1.5 rounded transition-colors ${interactionMode === 'point' ? 'bg-purple-500/30 text-purple-400' : 'text-neutral-400 hover:text-white'}`}
+                    title="Add Points"
+                  >
+                    <MousePointer2 size={14} />
+                  </button>
+                  <button
+                    onClick={() => setInteractionMode('pan')}
+                    className={`p-1.5 rounded transition-colors ${interactionMode === 'pan' ? 'bg-purple-500/30 text-purple-400' : 'text-neutral-400 hover:text-white'}`}
+                    title="Pan Mode"
+                  >
+                    <Move size={14} />
+                  </button>
+                  <div className="w-px h-4 bg-white/10 mx-1" />
+                  <button
+                    onClick={() => setZoom(prev => Math.min(5, prev * 1.2))}
+                    className="p-1.5 rounded text-neutral-400 hover:text-white transition-colors"
+                    title="Zoom In"
+                  >
+                    <ZoomIn size={14} />
+                  </button>
+                  <button
+                    onClick={() => setZoom(prev => Math.max(0.5, prev / 1.2))}
+                    className="p-1.5 rounded text-neutral-400 hover:text-white transition-colors"
+                    title="Zoom Out"
+                  >
+                    <ZoomOut size={14} />
+                  </button>
+                  <button
+                    onClick={resetView}
+                    className="p-1.5 rounded text-neutral-400 hover:text-white transition-colors"
+                    title="Reset View"
+                  >
+                    <Maximize2 size={14} />
+                  </button>
+                </div>
+                <div className="px-2 py-1.5 rounded-lg bg-black/60 backdrop-blur-xl border border-white/10">
+                  <span className="text-xs text-neutral-400">{Math.round(zoom * 100)}%</span>
+                </div>
+              </div>
+            </motion.div>
 
           <motion.div
             initial={{ opacity: 0, x: 20 }}

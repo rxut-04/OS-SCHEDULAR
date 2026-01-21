@@ -14,7 +14,12 @@ import {
   GitBranch,
   Eye,
   EyeOff,
-  TreeDeciduous
+  TreeDeciduous,
+  ZoomIn,
+  ZoomOut,
+  Move,
+  Maximize2,
+  MousePointer2
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -74,6 +79,11 @@ export default function DecisionTreeVisualizer() {
   
   const [canvasSize, setCanvasSize] = useState({ width: 900, height: 600 });
   const [treeStats, setTreeStats] = useState({ depth: 0, nodes: 0, leaves: 0 });
+  
+  const [zoom, setZoom] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
 
   const generateDataset = useCallback(() => {
     const points: DataPoint[] = [];
@@ -592,31 +602,38 @@ export default function DecisionTreeVisualizer() {
     };
 
     const render = () => {
-      ctx.fillStyle = '#0B0F14';
-      ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
+        ctx.fillStyle = '#0B0F14';
+        ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
 
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
-      ctx.lineWidth = 1;
-      const gridSize = 30;
-      for (let x = 0; x < canvasSize.width; x += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvasSize.height);
-        ctx.stroke();
-      }
-      for (let y = 0; y < canvasSize.height; y += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvasSize.width, y);
-        ctx.stroke();
-      }
+        ctx.save();
+        ctx.translate(canvasSize.width / 2 + panOffset.x, canvasSize.height / 2 + panOffset.y);
+        ctx.scale(zoom, zoom);
+        ctx.translate(-canvasSize.width / 2, -canvasSize.height / 2);
 
-      if (tree) {
-        drawTree(tree);
-      }
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
+        ctx.lineWidth = 1 / zoom;
+        const gridSize = 30;
+        for (let x = 0; x < canvasSize.width; x += gridSize) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, canvasSize.height);
+          ctx.stroke();
+        }
+        for (let y = 0; y < canvasSize.height; y += gridSize) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(canvasSize.width, y);
+          ctx.stroke();
+        }
 
-      animationRef.current = requestAnimationFrame(render);
-    };
+        if (tree) {
+          drawTree(tree);
+        }
+        
+        ctx.restore();
+
+        animationRef.current = requestAnimationFrame(render);
+      };
 
     render();
     return () => {
@@ -624,7 +641,7 @@ export default function DecisionTreeVisualizer() {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [tree, canvasSize, showSampleCount]);
+  }, [tree, canvasSize, showSampleCount, zoom, panOffset]);
 
   const handleReset = () => {
     setIsPlaying(false);
@@ -635,6 +652,35 @@ export default function DecisionTreeVisualizer() {
     setPredictionPath([]);
     setPredictionResult(null);
     setTreeStats({ depth: 0, nodes: 0, leaves: 0 });
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    setIsPanning(true);
+    setLastMousePos({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (isPanning) {
+      const dx = e.clientX - lastMousePos.x;
+      const dy = e.clientY - lastMousePos.y;
+      setPanOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+      setLastMousePos({ x: e.clientX, y: e.clientY });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsPanning(false);
+  };
+
+  const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    setZoom(prev => Math.min(5, Math.max(0.3, prev * delta)));
+  };
+
+  const resetView = () => {
+    setZoom(1);
+    setPanOffset({ x: 0, y: 0 });
   };
 
   const getStatusText = () => {
@@ -692,11 +738,49 @@ export default function DecisionTreeVisualizer() {
             style={{ minHeight: '550px' }}
           >
             <canvas
-              ref={canvasRef}
-              width={canvasSize.width}
-              height={canvasSize.height}
-              className="w-full h-full"
-            />
+                ref={canvasRef}
+                width={canvasSize.width}
+                height={canvasSize.height}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onWheel={handleWheel}
+                className={`w-full h-full ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
+              />
+              
+              <div className="absolute top-4 left-4 flex items-center gap-2">
+                <div className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-black/60 backdrop-blur-xl border border-white/10">
+                  <button
+                    onClick={() => setZoom(prev => Math.min(5, prev * 1.2))}
+                    className="p-1.5 rounded text-neutral-400 hover:text-white transition-colors"
+                    title="Zoom In"
+                  >
+                    <ZoomIn size={14} />
+                  </button>
+                  <button
+                    onClick={() => setZoom(prev => Math.max(0.3, prev / 1.2))}
+                    className="p-1.5 rounded text-neutral-400 hover:text-white transition-colors"
+                    title="Zoom Out"
+                  >
+                    <ZoomOut size={14} />
+                  </button>
+                  <button
+                    onClick={resetView}
+                    className="p-1.5 rounded text-neutral-400 hover:text-white transition-colors"
+                    title="Reset View"
+                  >
+                    <Maximize2 size={14} />
+                  </button>
+                </div>
+                <div className="px-2 py-1.5 rounded-lg bg-black/60 backdrop-blur-xl border border-white/10">
+                  <span className="text-xs text-neutral-400">{Math.round(zoom * 100)}%</span>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-xl border border-white/10">
+                  <Move size={14} className="text-emerald-400" />
+                  <span className="text-xs text-neutral-300">Drag to pan</span>
+                </div>
+              </div>
             
             <motion.div
               initial={{ opacity: 0, y: 10 }}

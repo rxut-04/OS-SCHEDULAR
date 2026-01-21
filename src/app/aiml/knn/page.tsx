@@ -14,7 +14,11 @@ import {
   Target,
   Eye,
   EyeOff,
-  MousePointer2
+  MousePointer2,
+  ZoomIn,
+  ZoomOut,
+  Move,
+  Maximize2
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -62,6 +66,12 @@ export default function KNNVisualizer() {
   
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
   const padding = 60;
+  
+  const [zoom, setZoom] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
+  const [interactionMode, setInteractionMode] = useState<'point' | 'pan'>('point');
 
   const generateDataPoints = useCallback(() => {
     const points: DataPoint[] = [];
@@ -99,18 +109,22 @@ export default function KNNVisualizer() {
   }, [distanceMetric]);
 
   const toCanvasCoords = useCallback((x: number, y: number) => {
+    const baseX = padding + x * (canvasSize.width - 2 * padding);
+    const baseY = canvasSize.height - padding - y * (canvasSize.height - 2 * padding);
     return {
-      x: padding + x * (canvasSize.width - 2 * padding),
-      y: canvasSize.height - padding - y * (canvasSize.height - 2 * padding)
+      x: (baseX - canvasSize.width / 2) * zoom + canvasSize.width / 2 + panOffset.x,
+      y: (baseY - canvasSize.height / 2) * zoom + canvasSize.height / 2 + panOffset.y
     };
-  }, [canvasSize, padding]);
+  }, [canvasSize, padding, zoom, panOffset]);
 
   const toDataCoords = useCallback((canvasX: number, canvasY: number) => {
+    const centeredX = (canvasX - panOffset.x - canvasSize.width / 2) / zoom + canvasSize.width / 2;
+    const centeredY = (canvasY - panOffset.y - canvasSize.height / 2) / zoom + canvasSize.height / 2;
     return {
-      x: (canvasX - padding) / (canvasSize.width - 2 * padding),
-      y: 1 - (canvasY - padding) / (canvasSize.height - 2 * padding)
+      x: (centeredX - padding) / (canvasSize.width - 2 * padding),
+      y: 1 - (centeredY - padding) / (canvasSize.height - 2 * padding)
     };
-  }, [canvasSize, padding]);
+  }, [canvasSize, padding, zoom, panOffset]);
 
   useEffect(() => {
     const updateSize = () => {
@@ -211,40 +225,47 @@ export default function KNNVisualizer() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const render = () => {
-      ctx.fillStyle = '#0B0F14';
-      ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
+      const render = () => {
+        ctx.fillStyle = '#0B0F14';
+        ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
 
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
-      ctx.lineWidth = 1;
-      const gridSize = 40;
-      for (let x = padding; x < canvasSize.width - padding; x += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(x, padding);
-        ctx.lineTo(x, canvasSize.height - padding);
-        ctx.stroke();
-      }
-      for (let y = padding; y < canvasSize.height - padding; y += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(padding, y);
-        ctx.lineTo(canvasSize.width - padding, y);
-        ctx.stroke();
-      }
+        ctx.save();
+        ctx.translate(canvasSize.width / 2 + panOffset.x, canvasSize.height / 2 + panOffset.y);
+        ctx.scale(zoom, zoom);
+        ctx.translate(-canvasSize.width / 2, -canvasSize.height / 2);
 
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(padding, padding, canvasSize.width - 2 * padding, canvasSize.height - 2 * padding);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+        ctx.lineWidth = 1 / zoom;
+        const gridSize = 40;
+        for (let x = padding; x < canvasSize.width - padding; x += gridSize) {
+          ctx.beginPath();
+          ctx.moveTo(x, padding);
+          ctx.lineTo(x, canvasSize.height - padding);
+          ctx.stroke();
+        }
+        for (let y = padding; y < canvasSize.height - padding; y += gridSize) {
+          ctx.beginPath();
+          ctx.moveTo(padding, y);
+          ctx.lineTo(canvasSize.width - padding, y);
+          ctx.stroke();
+        }
 
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-      ctx.font = '10px monospace';
-      for (let i = 0; i <= 10; i++) {
-        const x = padding + (i / 10) * (canvasSize.width - 2 * padding);
-        ctx.fillText((i / 10).toFixed(1), x - 10, canvasSize.height - padding + 20);
-      }
-      for (let i = 0; i <= 10; i++) {
-        const y = canvasSize.height - padding - (i / 10) * (canvasSize.height - 2 * padding);
-        ctx.fillText((i / 10).toFixed(1), padding - 30, y + 4);
-      }
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.lineWidth = 1 / zoom;
+        ctx.strokeRect(padding, padding, canvasSize.width - 2 * padding, canvasSize.height - 2 * padding);
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.font = `${10 / zoom}px monospace`;
+        for (let i = 0; i <= 10; i++) {
+          const x = padding + (i / 10) * (canvasSize.width - 2 * padding);
+          ctx.fillText((i / 10).toFixed(1), x - 10, canvasSize.height - padding + 20);
+        }
+        for (let i = 0; i <= 10; i++) {
+          const y = canvasSize.height - padding - (i / 10) * (canvasSize.height - 2 * padding);
+          ctx.fillText((i / 10).toFixed(1), padding - 30, y + 4);
+        }
+        
+        ctx.restore();
 
       if (queryPoint && waveRadius > 0 && status === 'calculating') {
         const qCoords = toCanvasCoords(queryPoint.x, queryPoint.y);
@@ -360,9 +381,10 @@ export default function KNNVisualizer() {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [dataPoints, queryPoint, canvasSize, waveRadius, status, showDistanceLines, toCanvasCoords]);
+  }, [dataPoints, queryPoint, canvasSize, waveRadius, status, showDistanceLines, toCanvasCoords, zoom, panOffset]);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (interactionMode === 'pan') return;
     if (status !== 'idle' && status !== 'completed') return;
     
     const canvas = canvasRef.current;
@@ -381,6 +403,37 @@ export default function KNNVisualizer() {
       handleReset();
       setQueryPoint({ x: coords.x, y: coords.y, predictedLabel: null });
     }
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (interactionMode === 'pan') {
+      setIsPanning(true);
+      setLastMousePos({ x: e.clientX, y: e.clientY });
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (isPanning && interactionMode === 'pan') {
+      const dx = e.clientX - lastMousePos.x;
+      const dy = e.clientY - lastMousePos.y;
+      setPanOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+      setLastMousePos({ x: e.clientX, y: e.clientY });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsPanning(false);
+  };
+
+  const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    setZoom(prev => Math.min(5, Math.max(0.5, prev * delta)));
+  };
+
+  const resetView = () => {
+    setZoom(1);
+    setPanOffset({ x: 0, y: 0 });
   };
 
   const handleReset = () => {
@@ -466,17 +519,61 @@ export default function KNNVisualizer() {
             style={{ minHeight: '500px' }}
           >
             <canvas
-              ref={canvasRef}
-              width={canvasSize.width}
-              height={canvasSize.height}
-              onClick={handleCanvasClick}
-              className="w-full h-full cursor-crosshair"
-            />
-            
-            <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-black/60 backdrop-blur-xl border border-white/10">
-              <MousePointer2 size={14} className="text-purple-400" />
-              <span className="text-xs text-neutral-300">Click to place query point</span>
-            </div>
+                ref={canvasRef}
+                width={canvasSize.width}
+                height={canvasSize.height}
+                onClick={handleCanvasClick}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onWheel={handleWheel}
+                className={`w-full h-full ${interactionMode === 'pan' ? 'cursor-grab' : 'cursor-crosshair'} ${isPanning ? 'cursor-grabbing' : ''}`}
+              />
+              
+              <div className="absolute top-4 left-4 flex items-center gap-2">
+                <div className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-black/60 backdrop-blur-xl border border-white/10">
+                  <button
+                    onClick={() => setInteractionMode('point')}
+                    className={`p-1.5 rounded transition-colors ${interactionMode === 'point' ? 'bg-purple-500/30 text-purple-400' : 'text-neutral-400 hover:text-white'}`}
+                    title="Place Query Point"
+                  >
+                    <MousePointer2 size={14} />
+                  </button>
+                  <button
+                    onClick={() => setInteractionMode('pan')}
+                    className={`p-1.5 rounded transition-colors ${interactionMode === 'pan' ? 'bg-purple-500/30 text-purple-400' : 'text-neutral-400 hover:text-white'}`}
+                    title="Pan Mode"
+                  >
+                    <Move size={14} />
+                  </button>
+                  <div className="w-px h-4 bg-white/10 mx-1" />
+                  <button
+                    onClick={() => setZoom(prev => Math.min(5, prev * 1.2))}
+                    className="p-1.5 rounded text-neutral-400 hover:text-white transition-colors"
+                    title="Zoom In"
+                  >
+                    <ZoomIn size={14} />
+                  </button>
+                  <button
+                    onClick={() => setZoom(prev => Math.max(0.5, prev / 1.2))}
+                    className="p-1.5 rounded text-neutral-400 hover:text-white transition-colors"
+                    title="Zoom Out"
+                  >
+                    <ZoomOut size={14} />
+                  </button>
+                  <button
+                    onClick={resetView}
+                    className="p-1.5 rounded text-neutral-400 hover:text-white transition-colors"
+                    title="Reset View"
+                  >
+                    <Maximize2 size={14} />
+                  </button>
+                </div>
+                <div className="px-2 py-1.5 rounded-lg bg-black/60 backdrop-blur-xl border border-white/10">
+                  <span className="text-xs text-neutral-400">{Math.round(zoom * 100)}%</span>
+                </div>
+              </div>
             
             <motion.div
               initial={{ opacity: 0, y: 10 }}
