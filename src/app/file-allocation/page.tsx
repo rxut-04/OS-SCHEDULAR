@@ -144,6 +144,18 @@ export default function FileAllocationVisualizer() {
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const preventScroll = (e: WheelEvent) => {
+      e.preventDefault();
+    };
+
+    container.addEventListener('wheel', preventScroll, { passive: false });
+    return () => container.removeEventListener('wheel', preventScroll);
+  }, []);
+
   const findContiguousBlocks = (size: number): number[] | null => {
     for (let start = 0; start <= TOTAL_BLOCKS - size; start++) {
       let found = true;

@@ -125,6 +125,18 @@ export default function LinearRegressionVisualizer() {
   }, []);
 
   useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const preventScroll = (e: WheelEvent) => {
+      e.preventDefault();
+    };
+
+    container.addEventListener('wheel', preventScroll, { passive: false });
+    return () => container.removeEventListener('wheel', preventScroll);
+  }, []);
+
+  useEffect(() => {
     const newPoints = generatePoints(numPoints);
     setPoints(newPoints);
     const initSlope = (Math.random() - 0.5) * 0.5;

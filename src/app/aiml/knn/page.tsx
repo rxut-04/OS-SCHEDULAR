@@ -129,20 +129,32 @@ export default function KNNVisualizer() {
   useEffect(() => {
     const updateSize = () => {
       if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        setCanvasSize({
-          width: Math.max(500, rect.width),
-          height: Math.max(450, rect.height)
-        });
-      }
-    };
-    
-    updateSize();
-    window.addEventListener('resize', updateSize);
-    return () => window.removeEventListener('resize', updateSize);
-  }, []);
+          const rect = containerRef.current.getBoundingClientRect();
+          setCanvasSize({
+            width: Math.max(500, rect.width),
+            height: Math.max(450, rect.height)
+          });
+        }
+      };
+      
+      updateSize();
+      window.addEventListener('resize', updateSize);
+      return () => window.removeEventListener('resize', updateSize);
+    }, []);
 
   useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const preventScroll = (e: WheelEvent) => {
+      e.preventDefault();
+    };
+
+    container.addEventListener('wheel', preventScroll, { passive: false });
+    return () => container.removeEventListener('wheel', preventScroll);
+  }, []);
+
+    useEffect(() => {
     setDataPoints(generateDataPoints());
   }, [generateDataPoints]);
 

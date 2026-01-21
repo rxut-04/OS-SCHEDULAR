@@ -147,6 +147,18 @@ export default function PageReplacementVisualizer() {
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const preventScroll = (e: WheelEvent) => {
+      e.preventDefault();
+    };
+
+    container.addEventListener('wheel', preventScroll, { passive: false });
+    return () => container.removeEventListener('wheel', preventScroll);
+  }, []);
+
   const findVictim = useCallback((currentFrames: Frame[], futureRequests: number[]): number => {
     switch (algorithm) {
       case 'fifo': {

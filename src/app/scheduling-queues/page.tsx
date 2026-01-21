@@ -113,6 +113,18 @@ export default function SchedulingQueuesVisualizer() {
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const preventScroll = (e: WheelEvent) => {
+      e.preventDefault();
+    };
+
+    container.addEventListener('wheel', preventScroll, { passive: false });
+    return () => container.removeEventListener('wheel', preventScroll);
+  }, []);
+
   const addProcess = useCallback(() => {
     const id = `P${processCounter}`;
     const color = PROCESS_COLORS[(processCounter - 1) % PROCESS_COLORS.length];

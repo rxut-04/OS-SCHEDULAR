@@ -153,20 +153,32 @@ export default function LogisticRegressionVisualizer() {
   useEffect(() => {
     const updateSize = () => {
       if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        setCanvasSize({
-          width: Math.max(400, rect.width),
-          height: Math.max(400, rect.height),
-        });
-      }
-    };
-    
-    updateSize();
-    window.addEventListener('resize', updateSize);
-    return () => window.removeEventListener('resize', updateSize);
-  }, []);
+          const rect = containerRef.current.getBoundingClientRect();
+          setCanvasSize({
+            width: Math.max(400, rect.width),
+            height: Math.max(400, rect.height),
+          });
+        }
+      };
+      
+      updateSize();
+      window.addEventListener('resize', updateSize);
+      return () => window.removeEventListener('resize', updateSize);
+    }, []);
 
   useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const preventScroll = (e: WheelEvent) => {
+      e.preventDefault();
+    };
+
+    container.addEventListener('wheel', preventScroll, { passive: false });
+    return () => container.removeEventListener('wheel', preventScroll);
+  }, []);
+
+    useEffect(() => {
     const newPoints = generatePoints(numPoints);
     setPoints(newPoints);
     const initW = [(Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2];

@@ -130,6 +130,18 @@ export default function ContiguousMemoryVisualizer() {
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const preventScroll = (e: WheelEvent) => {
+      e.preventDefault();
+    };
+
+    container.addEventListener('wheel', preventScroll, { passive: false });
+    return () => container.removeEventListener('wheel', preventScroll);
+  }, []);
+
   const findHole = (size: number): MemoryBlock | null => {
     const freeBlocks = memoryBlocks.filter(b => b.type === 'free' && b.size >= size);
     if (freeBlocks.length === 0) return null;

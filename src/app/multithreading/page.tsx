@@ -169,6 +169,18 @@ export default function MultithreadingVisualizer() {
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const preventScroll = (e: WheelEvent) => {
+      e.preventDefault();
+    };
+
+    container.addEventListener('wheel', preventScroll, { passive: false });
+    return () => container.removeEventListener('wheel', preventScroll);
+  }, []);
+
   const mapThreads = useCallback(() => {
     if (userThreads.length === 0 || kernelThreads.length === 0) return;
 
