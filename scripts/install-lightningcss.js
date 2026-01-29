@@ -6,9 +6,13 @@ function log(message) {
   process.stdout.write(`[lightningcss] ${message}\n`);
 }
 
-function installLinuxBinary(pkg) {
-  log(`Installing ${pkg}...`);
-  execSync(`npm install --no-save ${pkg}`, { stdio: "inherit" });
+function installLinuxBinaries() {
+  // Install both in one command so neither gets removed when the other is installed
+  log("Installing lightningcss-linux-x64-gnu and @tailwindcss/oxide-linux-x64-gnu...");
+  execSync(
+    "npm install --no-save lightningcss-linux-x64-gnu@1.30.2 @tailwindcss/oxide-linux-x64-gnu@4.1.18",
+    { stdio: "inherit" }
+  );
 }
 
 function ensureBinaryPresent() {
@@ -54,15 +58,11 @@ function ensureBinaryPresent() {
     if (!fs.existsSync(location)) {
       continue;
     }
-    
-    const nodeDir = path.join(location, "node");
-    const targetPath = path.join(nodeDir, "lightningcss.linux-x64-gnu.node");
+    // lightningcss/node/index.js does require('../lightningcss.linux-x64-gnu.node')
+    // so the file must be at lightningcss/lightningcss.linux-x64-gnu.node (sibling to node/)
+    const targetPath = path.join(location, "lightningcss.linux-x64-gnu.node");
     
     if (!fs.existsSync(targetPath)) {
-      // Ensure directory exists
-      if (!fs.existsSync(nodeDir)) {
-        fs.mkdirSync(nodeDir, { recursive: true });
-      }
       fs.copyFileSync(sourceBinary, targetPath);
       log(`Copied Linux binary to ${targetPath}.`);
     } else {
@@ -154,8 +154,7 @@ function main() {
   }
 
   try {
-    installLinuxBinary("lightningcss-linux-x64-gnu@1.30.2");
-    installLinuxBinary("@tailwindcss/oxide-linux-x64-gnu@4.1.18");
+    installLinuxBinaries();
   } catch (error) {
     log(`Warning: Failed to install binary packages: ${error.message}`);
     log("Build will continue but may be slower without native binaries.");
