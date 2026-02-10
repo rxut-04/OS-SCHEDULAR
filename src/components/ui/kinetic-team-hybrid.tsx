@@ -181,10 +181,10 @@ export default function KineticModulesList() {
     <div
       ref={containerRef}
       onMouseMove={handleMouseMove}
-      className="relative min-h-screen w-full cursor-default px-6 py-24 text-neutral-200 md:px-12"
+      className="relative min-h-screen w-full cursor-default px-6 py-24 md:px-12"
+      style={{ background: "var(--alg-bg)", color: "var(--alg-text)" }}
     >
-      {/* Background Ambience */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.03),transparent_70%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(6,78,59,0.04),transparent_70%)]" />
       
       <div className="mx-auto max-w-6xl">
         <motion.header 
@@ -194,12 +194,12 @@ export default function KineticModulesList() {
           className="mb-12 flex flex-col gap-4 md:flex-row md:items-end md:justify-between"
         >
           <div>
-            <h1 className="text-4xl font-light tracking-tighter text-white sm:text-6xl md:text-8xl">
-              Learning <span className="text-neutral-600">Modules</span>
+            <h1 className="text-4xl font-light tracking-tighter sm:text-6xl md:text-8xl" style={{ color: "var(--alg-text)" }}>
+              Learning <span style={{ color: "var(--alg-primary)" }}>Modules</span>
             </h1>
           </div>
-          <div className="h-px flex-1 bg-neutral-900 mx-8 hidden md:block" />
-          <p className="text-xs font-medium uppercase tracking-[0.3em] text-neutral-500">
+          <div className="h-px flex-1 mx-8 hidden md:block" style={{ background: "var(--border-color)" }} />
+          <p className="text-xs font-medium uppercase tracking-[0.3em]" style={{ color: "var(--text-muted)" }}>
             Select a topic to start
           </p>
         </motion.header>
@@ -215,12 +215,12 @@ export default function KineticModulesList() {
             onClick={() => setActiveTab('os')}
             className={`group relative flex items-center gap-3 px-6 py-4 rounded-2xl border transition-all duration-500 ${
               activeTab === 'os'
-                ? 'bg-blue-500/10 border-blue-500/30 text-white'
-                : 'bg-white/5 border-white/10 text-neutral-400 hover:bg-white/10 hover:text-white'
+                ? 'bg-blue-500/10 border-blue-500/30 text-[var(--alg-text)]'
+                : 'bg-black/5 border-black/10 text-neutral-600 hover:bg-black/10 hover:text-[var(--alg-text)]'
             }`}
           >
-            <div className={`p-2 rounded-xl transition-colors ${activeTab === 'os' ? 'bg-blue-500/20' : 'bg-white/5 group-hover:bg-white/10'}`}>
-              <Cpu size={24} className={activeTab === 'os' ? 'text-blue-400' : 'text-neutral-500'} />
+            <div className={`p-2 rounded-xl transition-colors ${activeTab === 'os' ? 'bg-blue-500/20' : 'bg-black/5 group-hover:bg-black/10'}`}>
+              <Cpu size={24} className={activeTab === 'os' ? 'text-blue-600' : 'text-neutral-500'} />
             </div>
             <div className="text-left">
               <div className="font-semibold text-sm">Operating Systems</div>
@@ -239,17 +239,17 @@ export default function KineticModulesList() {
             onClick={() => setActiveTab('aiml')}
             className={`group relative flex items-center gap-3 px-6 py-4 rounded-2xl border transition-all duration-500 ${
               activeTab === 'aiml'
-                ? 'bg-purple-500/10 border-purple-500/30 text-white'
-                : 'bg-white/5 border-white/10 text-neutral-400 hover:bg-white/10 hover:text-white'
+                ? 'bg-purple-500/10 border-purple-500/30 text-[var(--alg-text)]'
+                : 'bg-black/5 border-black/10 text-neutral-600 hover:bg-black/10 hover:text-[var(--alg-text)]'
             }`}
           >
-            <div className={`p-2 rounded-xl transition-colors ${activeTab === 'aiml' ? 'bg-purple-500/20' : 'bg-white/5 group-hover:bg-white/10'}`}>
-              <Brain size={24} className={activeTab === 'aiml' ? 'text-purple-400' : 'text-neutral-500'} />
+            <div className={`p-2 rounded-xl transition-colors ${activeTab === 'aiml' ? 'bg-purple-500/20' : 'bg-black/5 group-hover:bg-black/10'}`}>
+              <Brain size={24} className={activeTab === 'aiml' ? 'text-purple-600' : 'text-neutral-500'} />
             </div>
             <div className="text-left">
               <div className="font-semibold text-sm flex items-center gap-2">
                 AI/ML Visualizer
-                <span className="px-2 py-0.5 text-[10px] font-bold bg-purple-500/20 text-purple-300 rounded-full border border-purple-500/30 animate-pulse">NEW</span>
+                <span className="px-2 py-0.5 text-[10px] font-bold bg-purple-500/20 text-purple-600 rounded-full border border-purple-500/30 animate-pulse">NEW</span>
               </div>
               <div className="text-xs text-neutral-500">Neural Networks, Clustering</div>
             </div>
@@ -387,7 +387,7 @@ function ModuleRow({
       onMouseEnter={() => !isMobile && setActiveId(data.id)}
       onMouseLeave={() => !isMobile && setActiveId(null)}
       onClick={onClick}
-      className={`group relative border-t border-neutral-900 transition-colors duration-500 last:border-b cursor-pointer ${
+      className={`group relative border-t transition-colors duration-500 last:border-b cursor-pointer border-[var(--border-color)] ${
         isAIML && isActive ? 'bg-gradient-to-r from-purple-500/5 to-transparent' : ''
       }`}
     >
@@ -395,13 +395,13 @@ function ModuleRow({
         
         {/* Name & Index Section */}
         <div className="flex items-baseline gap-6 md:gap-12 pl-4 md:pl-0 transition-transform duration-500 group-hover:translate-x-4">
-          <span className={`font-mono text-xs ${isAIML ? 'text-purple-500/50' : 'text-neutral-600'}`}>
+          <span className={`font-mono text-xs ${isAIML ? 'text-purple-500/70' : 'text-neutral-600'}`}>
             {String(index + 1).padStart(2, '0')}
           </span>
           <h2 className={`text-3xl font-medium tracking-tight transition-colors duration-300 md:text-6xl ${
             isAIML 
-              ? 'text-neutral-400 group-hover:text-purple-300' 
-              : 'text-neutral-400 group-hover:text-white'
+              ? 'text-neutral-600 group-hover:text-purple-600' 
+              : 'text-neutral-600 group-hover:text-[var(--alg-text)]'
           }`}>
             {data.name}
           </h2>
@@ -411,21 +411,21 @@ function ModuleRow({
         <div className="mt-4 flex items-center justify-between pl-12 pr-4 md:mt-0 md:justify-end md:gap-12 md:pl-0 md:pr-0">
           <span className={`text-xs font-medium uppercase tracking-[0.2em] transition-colors ${
             isAIML 
-              ? 'text-purple-500/40 group-hover:text-purple-400' 
-              : 'text-neutral-600 group-hover:text-neutral-400'
+              ? 'text-purple-600/80 group-hover:text-purple-600' 
+              : 'text-neutral-600 group-hover:text-neutral-700'
           }`}>
             {data.category}
           </span>
           
           {/* Mobile Toggle Icon */}
-          <div className={`block md:hidden ${isAIML ? 'text-purple-400' : 'text-neutral-500'}`}>
+          <div className={`block md:hidden ${isAIML ? 'text-purple-600' : 'text-neutral-500'}`}>
             <ArrowUpRight size={18} />
           </div>
 
           {/* Desktop Arrow */}
           <motion.div
              animate={{ x: isActive ? 0 : -10, opacity: isActive ? 1 : 0 }}
-             className={`hidden md:block ${isAIML ? 'text-purple-400' : 'text-white'}`}
+             className={`hidden md:block ${isAIML ? 'text-purple-600' : 'text-[var(--alg-text)]'}`}
           >
              <ArrowUpRight size={28} strokeWidth={1.5} />
           </motion.div>

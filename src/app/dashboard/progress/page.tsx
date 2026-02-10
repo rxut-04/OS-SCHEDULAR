@@ -28,7 +28,7 @@ export default function ProgressPage() {
 
         {/* Different Sizes Demo */}
         <div className="space-y-4">
-          <h2 className="text-xl font-bold text-white">Size Variations</h2>
+          <h2 className="text-xl font-bold" style={{ color: 'var(--alg-text)' }}>Size Variations</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-center justify-items-center">
             <div className="text-center">
               <p className="text-gray-400 text-sm mb-2">Small (150px)</p>
@@ -50,15 +50,15 @@ export default function ProgressPage() {
         </div>
 
         {/* Props Documentation */}
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-lg">
-          <h2 className="text-xl font-bold text-white mb-4">Component Props</h2>
-          <div className="space-y-3 text-gray-300">
-            <div><code className="text-orange-400">value</code>: <span className="text-gray-400">number (0-100) - The percentage value to display</span></div>
-            <div><code className="text-orange-400">size</code>: <span className="text-gray-400">number - The width/height of the component in pixels</span></div>
-            <div><code className="text-orange-400">strokeWidth</code>: <span className="text-gray-400">number | undefined - Custom stroke width (auto-calculated if not provided)</span></div>
-            <div><code className="text-orange-400">className</code>: <span className="text-gray-400">string - Additional CSS classes</span></div>
-            <div><code className="text-orange-400">showLabels</code>: <span className="text-gray-400">boolean - Show/hide 0% and 100% labels</span></div>
-            <div><code className="text-orange-400">duration</code>: <span className="text-gray-400">number - Animation duration in seconds</span></div>
+        <div className="p-6 rounded-lg border" style={{ background: 'var(--alg-white)', borderColor: 'var(--border-color)' }}>
+          <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--alg-text)' }}>Component Props</h2>
+          <div className="space-y-3" style={{ color: 'var(--text-secondary)' }}>
+            <div><code className="text-orange-600">value</code>: <span className="text-neutral-600">number (0-100) - The percentage value to display</span></div>
+            <div><code className="text-orange-600">size</code>: <span className="text-neutral-600">number - The width/height of the component in pixels</span></div>
+            <div><code className="text-orange-600">strokeWidth</code>: <span className="text-neutral-600">number | undefined - Custom stroke width (auto-calculated if not provided)</span></div>
+            <div><code className="text-orange-600">className</code>: <span className="text-neutral-600">string - Additional CSS classes</span></div>
+            <div><code className="text-orange-600">showLabels</code>: <span className="text-neutral-600">boolean - Show/hide 0% and 100% labels</span></div>
+            <div><code className="text-orange-600">duration</code>: <span className="text-neutral-600">number - Animation duration in seconds</span></div>
           </div>
         </div>
       </div>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OS Theory | AlgoLogic</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #064E3B;
+            --secondary: #10B981;
+            --sidebar-bg: #E7E9EB;
+            --text: #111827;
+            --white: #ffffff;
+            --code-bg: #f4f4f4;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Source Sans Pro', sans-serif; background-color: white; color: var(--text); line-height: 1.6; }
+
+        /* --- TOP NAVIGATIONBAR --- */
+        .header {
+            position: fixed; top: 0; width: 100%; height: 60px;
+            background: var(--white); border-bottom: 1px solid #ddd;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 30px; z-index: 1000;
+        }
+        .header .logo { font-weight: 900; color: var(--primary); font-size: 22px; text-decoration: none; }
+        .back-home { text-decoration: none; color: #666; font-weight: 600; font-size: 15px; }
+        .back-home:hover { color: var(--secondary); }
+
+        /* --- MAIN LAYOUT --- */
+        .container { display: flex; margin-top: 60px; height: calc(100vh - 60px); }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 250px; min-width: 250px; background: var(--sidebar-bg);
+            overflow-y: auto; border-right: 1px solid #ddd; padding-top: 20px;
+        }
+        .sidebar h2 { padding: 0 20px 15px; font-size: 20px; color: #000; font-weight: 700; }
+        .sidebar-link {
+            display: block; padding: 10px 20px; color: #333;
+            text-decoration: none; font-size: 16px; transition: 0.2s; cursor: pointer;
+        }
+        .sidebar-link:hover { background-color: #ccc; }
+        .sidebar-link.active { background-color: var(--secondary); color: white; font-weight: 700; }
+
+        /* --- CONTENT AREA --- */
+        .content { flex-grow: 1; overflow-y: auto; padding: 40px 10%; position: relative; }
+        .content h1 { font-size: 36px; margin-bottom: 10px; color: #282A35; }
+        .unit-label { color: var(--secondary); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .theory-body { font-size: 18px; color: #333; margin-top: 20px; }
+        .theory-body p { margin-bottom: 15px; }
+        .theory-body ul { margin-left: 25px; margin-bottom: 20px; }
+        .theory-body b { color: var(--primary); }
+
+        /* Image Styling */
+        .content-img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin: 25px auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: 1px solid #eee;
+        }
+
+        /* --- NAVIGATION BUTTONS --- */
+        .nav-controls {
+            display: flex; justify-content: space-between; margin: 50px 0;
+            border-top: 1px solid #eee; padding-top: 30px;
+        }
+        .nav-btn {
+            background-color: var(--secondary); color: white; padding: 12px 25px;
+            border-radius: 5px; text-decoration: none; font-weight: 700; cursor: pointer; border: none; font-size: 16px;
+        }
+        .nav-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .content { padding: 30px 5%; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <a href="index.html" class="logo"><i class="fas fa-code"></i> AlgoLogic</a>
+        <a href="index.html" class="back-home"><i class="fas fa-arrow-left"></i> Exit Tutorial</a>
+    </header>
+
+    <div class="container">
+        <nav class="sidebar" id="topicList">
+            <h2>OS Tutorial</h2>
+        </nav>
+
+        <main class="content" id="mainScroll">
+            <span class="unit-label" id="displayUnit">Unit 1</span>
+            <h1 id="displayTitle">Loading...</h1>
+            <hr>
+
+            <div class="theory-body" id="displayContent"></div>
+
+            <div class="nav-controls">
+                <button class="nav-btn" id="prevBtn" onclick="changeTopic(-1)">❮ Previous</button>
+                <button class="nav-btn" id="nextBtn" onclick="changeTopic(1)">Next ❯</button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const osData = [
+            {
+                title: "OS Definition & History",
+                unit: "Unit 1: Introduction",
+                content: `
+                    <p>An Operating System (OS) is a software that acts as an interface between a computer user and computer hardware. It manages system resources like CPU, memory, and storage, and provides a platform for application programs to run.</p>
+                    <b>The Primary Goals of an OS:</b>
+                    <ul>
+                        <li><b>Execute Programs:</b> Execute user programs and make solving user problems easier.</li>
+                        <li><b>Convenience:</b> Make the computer system convenient to use.</li>
+                        <li><b>Efficiency:</b> Use the computer hardware in an efficient manner.</li>
+                    </ul>
+                `
+            },
+            {
+                title: "Functions of OS",
+                unit: "Unit 1: Introduction",
+                content: `
+                    <p>The operating system manages all the resources of a computer system. It performs several key roles to ensure the hardware and software work together seamlessly.</p>
+                    
+                    <b>1. Process Management:</b> 
+                    <p>The OS manages the execution of multiple programs. It allocates CPU time to different processes, handles their creation/termination, and ensures they can communicate without interfering with each other.</p>
+                    
+                    
+                    <b>2. Memory Management:</b> 
+                    <p>The OS keeps track of every memory location and manages the primary memory (RAM). It decides which process gets memory when and how much, ensuring that one program's data doesn't overwrite another's.</p>
+                    
+                    
+                    <b>3. File Management:</b> 
+                    <p>It manages how data is stored on secondary storage (HDDs/SSDs). It organizes data into files and directories, handles access permissions, and keeps track of where data is physically located.</p>
+                    
+                    <b>4. I/O Device Management:</b> 
+                    <p>The OS acts as a communicator between hardware (keyboards, printers) and software using device drivers. It manages input/output flow to ensure hardware is used effectively.</p>
+                `
+            },
+            {
+                title: "Process States & PCB",
+                unit: "Unit 2: Process Management",
+                content: `
+                    <p>A process is essentially a program in execution. As it runs, it transitions through various <b>Process States</b>.</p>
+                    
+                    
+                    <b>Standard Process States:</b>
+                    <ul>
+                        <li><b>New:</b> The process is being created.</li>
+                        <li><b>Ready:</b> The process is waiting to be assigned to a processor.</li>
+                        <li><b>Running:</b> Instructions are being executed.</li>
+                        <li><b>Waiting:</b> The process is waiting for some event (like I/O completion).</li>
+                        <li><b>Terminated:</b> The process has finished execution.</li>
+                    </ul>
+
+                    <b>Process Control Block (PCB):</b>
+                    <p>Each process is represented in the OS by a PCB. It is a data structure containing vital information such as the Process State, Program Counter, CPU registers, and memory management information.</p>
+                `
+            },
+            {
+                title: "Threads",
+                unit: "Unit 2: Process Management",
+                content: `
+                    <p>A thread is the basic unit of CPU utilization. It is often referred to as a "Lightweight Process."</p>
+                    
+                    <b>How Threads Work:</b>
+                    <p>While a traditional process has a single thread of control, modern applications use multiple threads to perform different tasks simultaneously. Each thread belongs to a process and shares its resources but has its own unique components:</p>
+                    
+                    
+                    <ul>
+                        <li><b>Thread ID:</b> A unique identifier.</li>
+                        <li><b>Program Counter:</b> Tracks the next instruction.</li>
+                        <li><b>Register Set:</b> Stores temporary values.</li>
+                        <li><b>Stack:</b> Stores execution history.</li>
+                    </ul>
+                    <p><b>Benefits:</b> Multithreading increases responsiveness and efficiency because threads share the process's code and data sections while working independently.</p>
+                `
+            }
+        ];
+
+        let currentIndex = 0;
+
+        // Initialize Sidebar
+        const sidebar = document.getElementById('topicList');
+        osData.forEach((item, index) => {
+            const link = document.createElement('a');
+            link.className = 'sidebar-link';
+            link.id = `link-${index}`;
+            link.innerText = item.title;
+            link.onclick = () => renderTopic(index);
+            sidebar.appendChild(link);
+        });
+
+        function renderTopic(index) {
+            currentIndex = index;
+            const data = osData[index];
+
+            document.getElementById('displayTitle').innerText = data.title;
+            document.getElementById('displayUnit').innerText = data.unit;
+            document.getElementById('displayContent').innerHTML = data.content;
+
+            // Highlight Sidebar
+            document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
+            document.getElementById(`link-${index}`).classList.add('active');
+
+            // Button State
+            document.getElementById('prevBtn').disabled = (index === 0);
+            document.getElementById('nextBtn').disabled = (index === osData.length - 1);
+
+            // Scroll top
+            document.getElementById('mainScroll').scrollTop = 0;
+        }
+
+        function changeTopic(step) {
+            const newIndex = currentIndex + step;
+            if (newIndex >= 0 && newIndex < osData.length) {
+                renderTopic(newIndex);
+            }
+        }
+
+        renderTopic(0);
+    </script>
+</body>
+</html>

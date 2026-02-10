@@ -38,7 +38,9 @@ import {
   VirtualMachine,
   Result,
   Education,
+  Logout,
 } from "@carbon/icons-react";
+import { createClient } from "@/lib/supabase/client";
 
 /** ======================= Local SVG paths (inline) ======================= */
 // Kept original paths for the logo/brand components
@@ -78,8 +80,8 @@ function BrandBadge() {
           <InterfacesLogoSquare />
         </div>
         <div className="px-2 py-1">
-          <div className="font-['Lexend:SemiBold',_sans-serif] text-[16px] text-neutral-50">
-            AlgoViz OS
+          <div className="font-semibold text-[16px]" style={{ color: 'var(--alg-primary)' }}>
+            AlgoLogic
           </div>
         </div>
       </a>
@@ -91,11 +93,12 @@ function BrandBadge() {
 
 function AvatarCircle() {
   return (
-    <div className="relative rounded-full shrink-0 size-8 bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center">
+    <div className="relative rounded-full shrink-0 size-8 flex items-center justify-center" style={{ background: 'var(--alg-secondary)' }}>
       <div className="font-bold text-xs text-white">U</div>
       <div
         aria-hidden="true"
-        className="absolute inset-0 rounded-full border border-neutral-800 pointer-events-none"
+        className="absolute inset-0 rounded-full border pointer-events-none"
+        style={{ borderColor: 'var(--border-color)' }}
       />
     </div>
   );
@@ -114,19 +117,19 @@ function SearchContainer({ isCollapsed = false }: { isCollapsed?: boolean }) {
       style={{ transitionTimingFunction: softSpringEasing }}
     >
       <div
-        className={`bg-white/5 border border-white/10 h-10 relative rounded-lg flex items-center transition-all duration-500 ${
+        className={`h-10 relative rounded-lg flex items-center transition-all duration-500 ${
           isCollapsed ? "w-10 min-w-10 justify-center" : "w-full"
         }`}
-        style={{ transitionTimingFunction: softSpringEasing }}
+        style={{ transitionTimingFunction: softSpringEasing, background: 'var(--alg-bg)', border: '1px solid var(--border-color)' }}
       >
         <div
           className={`flex items-center justify-center shrink-0 transition-all duration-500 ${
             isCollapsed ? "p-1" : "px-1"
           }`}
-          style={{ transitionTimingFunction: softSpringEasing }}
+          style={{ transitionTimingFunction: softSpringEasing, color: 'var(--alg-primary)' }}
         >
           <div className="size-8 flex items-center justify-center">
-            <SearchIcon size={16} className="text-neutral-50" />
+            <SearchIcon size={16} />
           </div>
         </div>
 
@@ -143,7 +146,8 @@ function SearchContainer({ isCollapsed = false }: { isCollapsed?: boolean }) {
                 placeholder="Search..."
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
-                className="w-full bg-transparent border-none outline-none font-['Lexend:Regular',_sans-serif] text-[14px] text-neutral-50 placeholder:text-neutral-400 leading-[20px]"
+                className="w-full bg-transparent border-none outline-none text-[14px] leading-[20px]"
+                style={{ color: 'var(--alg-text)' }}
                 tabIndex={isCollapsed ? -1 : 0}
               />
             </div>
@@ -181,15 +185,15 @@ function getSidebarContent(activeSection: string): SidebarContent {
         {
           title: "Overview",
           items: [
-            { icon: <View size={16} className="text-neutral-50" />, label: "Main Dashboard", isActive: true, href: "/dashboard" },
-            { icon: <Activity size={16} className="text-neutral-50" />, label: "Learning Stats", href: "/dashboard/progress" },
+            { icon: <View size={16} className="text-[var(--alg-text)]" />, label: "Main Dashboard", isActive: true, href: "/dashboard" },
+            { icon: <Activity size={16} className="text-[var(--alg-text)]" />, label: "Learning Stats", href: "/dashboard/progress" },
           ],
         },
         {
           title: "Quick Access",
           items: [
-             { icon: <Education size={16} className="text-neutral-50" />, label: "Modules", href: "/modules" },
-             { icon: <Task size={16} className="text-neutral-50" />, label: "Daily Quiz", href: "/dashboard/quiz" },
+             { icon: <Education size={16} className="text-[var(--alg-text)]" />, label: "Modules", href: "/modules" },
+             { icon: <Task size={16} className="text-[var(--alg-text)]" />, label: "Daily Quiz", href: "/dashboard/quiz" },
           ]
         }
       ],
@@ -201,24 +205,24 @@ function getSidebarContent(activeSection: string): SidebarContent {
         {
           title: "Process Management",
           items: [
-            { icon: <Code size={16} className="text-neutral-50" />, label: "CPU Scheduling", href: "/cpu-scheduling" },
-            { icon: <Task size={16} className="text-neutral-50" />, label: "Multithreading", href: "/multithreading" },
-            { icon: <DataClass size={16} className="text-neutral-50" />, label: "Scheduling Queues", href: "/scheduling-queues" },
+            { icon: <Code size={16} className="text-[var(--alg-text)]" />, label: "CPU Scheduling", href: "/cpu-scheduling" },
+            { icon: <Task size={16} className="text-[var(--alg-text)]" />, label: "Multithreading", href: "/multithreading" },
+            { icon: <DataClass size={16} className="text-[var(--alg-text)]" />, label: "Scheduling Queues", href: "/scheduling-queues" },
           ],
         },
         {
           title: "Memory",
           items: [
-            { icon: <VirtualMachine size={16} className="text-neutral-50" />, label: "Memory Mgmt", href: "/memory-management" },
-            { icon: <Result size={16} className="text-neutral-50" />, label: "Page Replacement", href: "/page-replacement" },
-            { icon: <FolderOpen size={16} className="text-neutral-50" />, label: "Contiguous Memory", href: "/contiguous-memory" },
+            { icon: <VirtualMachine size={16} className="text-[var(--alg-text)]" />, label: "Memory Mgmt", href: "/memory-management" },
+            { icon: <Result size={16} className="text-[var(--alg-text)]" />, label: "Page Replacement", href: "/page-replacement" },
+            { icon: <FolderOpen size={16} className="text-[var(--alg-text)]" />, label: "Contiguous Memory", href: "/contiguous-memory" },
           ],
         },
         {
           title: "Storage",
           items: [
-            { icon: <Folder size={16} className="text-neutral-50" />, label: "Disk Scheduling", href: "/disk-scheduling" },
-            { icon: <Folder size={16} className="text-neutral-50" />, label: "File Allocation", href: "/file-allocation" },
+            { icon: <Folder size={16} className="text-[var(--alg-text)]" />, label: "Disk Scheduling", href: "/disk-scheduling" },
+            { icon: <Folder size={16} className="text-[var(--alg-text)]" />, label: "File Allocation", href: "/file-allocation" },
           ],
         },
       ],
@@ -230,8 +234,8 @@ function getSidebarContent(activeSection: string): SidebarContent {
         {
           title: "Quizzes",
           items: [
-            { icon: <Task size={16} className="text-neutral-50" />, label: "Daily Quiz", href: "/dashboard/quiz" },
-            { icon: <Result size={16} className="text-neutral-50" />, label: "Past Results" },
+            { icon: <Task size={16} className="text-[var(--alg-text)]" />, label: "Daily Quiz", href: "/dashboard/quiz" },
+            { icon: <Result size={16} className="text-[var(--alg-text)]" />, label: "Past Results" },
           ],
         },
       ],
@@ -243,8 +247,8 @@ function getSidebarContent(activeSection: string): SidebarContent {
         {
           title: "Stats",
           items: [
-            { icon: <Analytics size={16} className="text-neutral-50" />, label: "My Progress", href: "/dashboard/progress" },
-            { icon: <StarFilled size={16} className="text-neutral-50" />, label: "Achievements" },
+            { icon: <Analytics size={16} className="text-[var(--alg-text)]" />, label: "My Progress", href: "/dashboard/progress" },
+            { icon: <StarFilled size={16} className="text-[var(--alg-text)]" />, label: "Achievements" },
           ],
         },
       ],
@@ -256,8 +260,8 @@ function getSidebarContent(activeSection: string): SidebarContent {
         {
           title: "Account",
           items: [
-            { icon: <UserIcon size={16} className="text-neutral-50" />, label: "Profile" },
-            { icon: <Security size={16} className="text-neutral-50" />, label: "Security" },
+            { icon: <UserIcon size={16} className="text-[var(--alg-text)]" />, label: "Profile" },
+            { icon: <Security size={16} className="text-[var(--alg-text)]" />, label: "Security" },
           ],
         },
       ],
@@ -286,9 +290,11 @@ function IconNavButton({
   return (
     <button
       type="button"
-      className={`flex items-center justify-center rounded-lg size-10 min-w-10 transition-colors duration-500
-        ${isActive ? "bg-white/20 text-neutral-50 shadow-lg shadow-white/5" : "hover:bg-white/10 text-neutral-400 hover:text-neutral-300"}`}
-      style={{ transitionTimingFunction: softSpringEasing }}
+      className="flex items-center justify-center rounded-lg size-10 min-w-10 transition-colors duration-500"
+      style={{
+        transitionTimingFunction: softSpringEasing,
+        ...(isActive ? { background: 'var(--alg-mint)', color: 'var(--alg-primary)' } : { color: 'var(--text-secondary)' }),
+      }}
       onClick={onClick}
     >
       {children}
@@ -311,7 +317,7 @@ function IconNavigation({
   ];
 
   return (
-    <aside className="bg-black/40 backdrop-blur-xl flex flex-col gap-2 items-center p-4 w-16 h-full border-r border-white/10 rounded-l-2xl z-50">
+    <aside className="flex flex-col gap-2 items-center p-4 w-16 h-full border-r rounded-l-2xl z-50" style={{ background: 'var(--alg-white)', borderColor: 'var(--border-color)' }}>
       {/* Logo */}
       <div className="mb-2 size-10 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity">
         <a href="/" className="size-7 flex items-center justify-center">
@@ -364,8 +370,8 @@ function SectionTitle({
         <button
           type="button"
           onClick={onToggleCollapse}
-          className="flex items-center justify-center rounded-lg size-10 min-w-10 transition-all duration-500 hover:bg-white/10 text-neutral-400 hover:text-neutral-300"
-          style={{ transitionTimingFunction: softSpringEasing }}
+          className="flex items-center justify-center rounded-lg size-10 min-w-10 transition-all duration-500 hover:bg-[var(--alg-mint)]"
+          style={{ color: 'var(--text-secondary)', transitionTimingFunction: softSpringEasing }}
           aria-label="Expand sidebar"
         >
           <span className="inline-block rotate-180">
@@ -381,7 +387,7 @@ function SectionTitle({
       <div className="flex items-center justify-between">
         <div className="flex items-center h-10">
           <div className="px-2 py-1">
-            <div className="font-['Lexend:SemiBold',_sans-serif] text-[18px] text-neutral-50 leading-[27px]">
+            <div className="font-semibold text-[18px] leading-[27px]" style={{ color: 'var(--alg-text)' }}>
               {title}
             </div>
           </div>
@@ -390,8 +396,8 @@ function SectionTitle({
           <button
             type="button"
             onClick={onToggleCollapse}
-            className="flex items-center justify-center rounded-lg size-10 min-w-10 transition-all duration-500 hover:bg-white/10 text-neutral-400 hover:text-neutral-300"
-            style={{ transitionTimingFunction: softSpringEasing }}
+            className="flex items-center justify-center rounded-lg size-10 min-w-10 transition-all duration-500 hover:bg-[var(--alg-mint)]"
+          style={{ color: 'var(--text-secondary)', transitionTimingFunction: softSpringEasing }}
             aria-label="Collapse sidebar"
           >
             <ChevronDownIcon size={16} className="-rotate-90" />
@@ -421,10 +427,10 @@ function DetailSidebar({ activeSection }: { activeSection: string }) {
 
   return (
     <aside
-      className={`bg-black/20 backdrop-blur-xl flex flex-col gap-4 items-start p-4 rounded-r-2xl transition-all duration-500 h-full border-r border-white/10 ${
+      className={`flex flex-col gap-4 items-start p-4 rounded-r-2xl transition-all duration-500 h-full border-r ${
         isCollapsed ? "w-16 min-w-16 !px-0 justify-center" : "w-64"
       }`}
-      style={{ transitionTimingFunction: softSpringEasing }}
+      style={{ transitionTimingFunction: softSpringEasing, background: 'var(--alg-white)', borderColor: 'var(--border-color)' }}
     >
       {!isCollapsed && <BrandBadge />}
 
@@ -449,25 +455,55 @@ function DetailSidebar({ activeSection }: { activeSection: string }) {
         ))}
       </div>
 
-      {!isCollapsed && (
-        <div className="w-full mt-auto pt-2 border-t border-white/10">
-          <div className="flex items-center gap-2 px-2 py-2">
-            <AvatarCircle />
-            <div className="font-['Lexend:Regular',_sans-serif] text-[14px] text-neutral-50">User</div>
+      <div className="w-full mt-auto pt-2 border-t" style={{ borderColor: 'var(--border-color)' }}>
+        {isCollapsed ? (
+          <button
+            type="button"
+            onClick={async () => {
+              const supabase = createClient();
+              if (supabase) await supabase.auth.signOut();
+              router.push("/");
+            }}
+            className="w-full flex items-center justify-center size-10 rounded-lg transition-colors hover:bg-[var(--alg-mint)]"
+            style={{ color: 'var(--alg-text)' }}
+            title="Logout"
+            aria-label="Logout"
+          >
+            <Logout size={20} />
+          </button>
+        ) : (
+          <>
+            <div className="flex items-center gap-2 px-2 py-2">
+              <AvatarCircle />
+              <div className="text-[14px]" style={{ color: 'var(--alg-text)' }}>User</div>
+              <button
+                type="button"
+                className="ml-auto size-8 rounded-md flex items-center justify-center hover:bg-[var(--alg-mint)]"
+                aria-label="More"
+              >
+                <svg className="size-4" viewBox="0 0 16 16" fill="none" style={{ fill: 'var(--alg-text)' }}>
+                  <circle cx="4" cy="8" r="1" />
+                  <circle cx="8" cy="8" r="1" />
+                  <circle cx="12" cy="8" r="1" />
+                </svg>
+              </button>
+            </div>
             <button
               type="button"
-              className="ml-auto size-8 rounded-md flex items-center justify-center hover:bg-white/10"
-              aria-label="More"
+              onClick={async () => {
+                const supabase = createClient();
+                if (supabase) await supabase.auth.signOut();
+                router.push("/");
+              }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-[14px] transition-colors hover:bg-[var(--alg-mint)]"
+              style={{ color: 'var(--alg-text)' }}
             >
-              <svg className="size-4" viewBox="0 0 16 16" fill="none">
-                <circle cx="4" cy="8" r="1" fill="#FAFAFA" />
-                <circle cx="8" cy="8" r="1" fill="#FAFAFA" />
-                <circle cx="12" cy="8" r="1" fill="#FAFAFA" />
-              </svg>
+              <Logout size={18} />
+              Logout
             </button>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </div>
     </aside>
   );
 }
@@ -501,8 +537,9 @@ function MenuItem({
     >
       <div
         className={`rounded-lg cursor-pointer transition-all duration-500 flex items-center relative ${
-          item.isActive ? "bg-white/10" : "hover:bg-white/10"
+          item.isActive ? "" : ""
         } ${isCollapsed ? "w-10 min-w-10 h-10 justify-center p-4" : "w-full h-10 px-4 py-2"}`}
+        style={{ ...(item.isActive ? { background: 'var(--alg-mint)', color: 'var(--alg-primary)' } : {}) }}
         style={{ transitionTimingFunction: softSpringEasing }}
         onClick={handleClick}
         title={isCollapsed ? item.label : undefined}
@@ -515,7 +552,7 @@ function MenuItem({
           }`}
           style={{ transitionTimingFunction: softSpringEasing }}
         >
-          <div className="font-['Lexend:Regular',_sans-serif] text-[14px] text-neutral-50 leading-[20px] truncate">
+          <div className="text-[14px] leading-[20px] truncate" style={{ color: 'var(--alg-text)' }}>
             {item.label}
           </div>
         </div>
@@ -529,7 +566,8 @@ function MenuItem({
           >
             <ChevronDownIcon
               size={16}
-              className="text-neutral-50 transition-transform duration-500"
+              className="transition-transform duration-500"
+              style={{ color: 'var(--alg-text)' }}
               style={{
                 transitionTimingFunction: softSpringEasing,
                 transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
@@ -546,11 +584,11 @@ function SubMenuItem({ item, onItemClick }: { item: MenuItemT; onItemClick?: () 
   return (
     <div className="w-full pl-9 pr-1 py-[1px]">
       <div
-        className="h-10 w-full rounded-lg cursor-pointer transition-colors hover:bg-white/10 flex items-center px-3 py-1"
+        className="h-10 w-full rounded-lg cursor-pointer transition-colors hover:bg-[var(--alg-mint)] flex items-center px-3 py-1"
         onClick={onItemClick}
       >
         <div className="flex-1 min-w-0">
-          <div className="font-['Lexend:Regular',_sans-serif] text-[14px] text-neutral-300 leading-[18px] truncate">
+          <div className="text-[14px] leading-[18px] truncate" style={{ color: 'var(--text-secondary)' }}>
             {item.label}
           </div>
         </div>
@@ -581,7 +619,7 @@ function MenuSection({
         style={{ transitionTimingFunction: softSpringEasing }}
       >
         <div className="flex items-center h-10 px-4">
-          <div className="font-['Lexend:Regular',_sans-serif] text-[12px] uppercase tracking-wider text-neutral-400">
+          <div className="text-[12px] uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
             {section.title}
           </div>
         </div>

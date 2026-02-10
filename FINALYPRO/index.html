@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3rd | Mastering OS & AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #064E3B;   /* Forest Green */
+            --secondary: #10B981; /* Emerald */
+            --bg: #F9FAFB;        /* Snow */
+            --text: #111827;      /* Obsidian */
+            --white: #ffffff;
+            --mint: #D1FAE5;      /* Light mint background */
+            --yellow: #FFF4A3;    /* Yellow highlight */
+            --pink: #FFC0C7;      /* Pink highlight */
+            --ai-accent: #8B8000; /* Dark Gold/Bronze for Robot circle contrast */
+            --overlay-bg: #282a35; /* Dark theme for Exercises */
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: 'Source Sans Pro', sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* --- NAVIGATION --- */
+        .top-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background: var(--white);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo-area { display: flex; align-items: center; gap: 15px; }
+        .top-links { display: flex; gap: 20px; list-style: none; }
+        .top-links a { text-decoration: none; color: var(--text); font-weight: 600; font-size: 17px; cursor: pointer; }
+
+        .right-actions { display: flex; align-items: center; gap: 15px; }
+        .sign-in-btn {
+            background: var(--secondary);
+            color: white;
+            padding: 8px 25px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .bottom-nav {
+            background: #043a2c; 
+            padding: 12px 20px;
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+        }
+
+        .bottom-nav a {
+            color: white; 
+            text-decoration: none;
+            text-transform: uppercase;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .bottom-nav a:hover { color: var(--secondary); }
+
+        /* --- OVERLAYS --- */
+        .tutorial-overlay {
+            display: none;
+            position: fixed;
+            top: 60px;
+            left: 0;
+            width: 100%;
+            height: calc(100% - 60px);
+            background-color: #043a2c; 
+            color: white;
+            padding: 40px 60px;
+            z-index: 999;
+            overflow-y: auto;
+        }
+
+        .overlay-header-bar {
+            background-color: #022c22;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            font-weight: 900;
+            letter-spacing: 2px;
+            font-size: 18px;
+            color: #fff;
+        }
+
+        .overlay-content {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            max-width: 1300px;
+            margin: 0 auto 50px auto; 
+        }
+
+        .overlay-column h3 { color: var(--yellow); font-size: 22px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
+        .overlay-column ul { list-style: none; }
+        .overlay-column li { margin-bottom: 12px; font-size: 15px; }
+        .overlay-column li span { font-weight: 700; color: #fff; }
+        .overlay-column li a { color: #bbb; text-decoration: none; margin-left: 5px; }
+        .overlay-column li a:hover { text-decoration: underline; color: var(--secondary); }
+
+        /* --- UPDATED EXERCISE OVERLAY --- */
+        #exercises-overlay {
+            display: none; 
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #064E3B 0%, #022c22 100%); 
+            z-index: 2000;
+            padding: 80px 40px;
+            color: white;
+            overflow-y: auto;
+        }
+
+        .exercise-header { text-align: center; margin-bottom: 50px; }
+        .exercise-header h2 { font-size: 60px; font-weight: 900; color: var(--yellow); margin-bottom: 10px; text-shadow: 2px 2px 10px rgba(0,0,0,0.3); }
+        .exercise-header p { font-size: 20px; opacity: 0.9; font-weight: 600; }
+
+        .exercise-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .exercise-card {
+            padding: 45px;
+            border-radius: 35px;
+            color: #064E3B;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .exercise-card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+        }
+
+        .exercise-card.osy { background-color: var(--mint); }
+        .exercise-card.aiml { background-color: var(--yellow); }
+
+        .exercise-card h3 { font-size: 32px; font-weight: 900; margin-bottom: 30px; border-bottom: 2px solid rgba(6, 78, 59, 0.1); padding-bottom: 10px; }
+
+        .ex-list { list-style: none; }
+        .ex-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            font-weight: 700;
+            font-size: 19px;
+            padding: 10px;
+            border-radius: 12px;
+            transition: background 0.3s;
+        }
+        .ex-item:hover { background: rgba(255,255,255,0.3); }
+
+        .ex-item i { margin-right: 15px; width: 30px; text-align: center; color: var(--primary); font-size: 22px; }
+        .start-link {
+            color: white;
+            background: var(--primary);
+            text-decoration: none;
+            font-weight: 800;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+        .start-link:hover { background: var(--secondary); transform: scale(1.05); }
+
+        .close-btn {
+            position: absolute; top: 30px; right: 40px;
+            font-size: 45px; color: white; cursor: pointer; line-height: 1; transition: 0.3s;
+        }
+        .close-btn:hover { color: var(--pink); transform: rotate(90deg); }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            background-color: var(--primary);
+            color: var(--white);
+            text-align: center;
+            padding: 100px 20px 150px 20px;
+            position: relative;
+        }
+
+        .hero h1 { font-size: 65px; font-weight: 900; margin-bottom: 10px; }
+        .hero p { font-size: 22px; font-weight: 700; margin-bottom: 40px; }
+
+        .search-wrapper { display: flex; justify-content: center; margin-bottom: 30px; }
+        .search-container {
+            position: relative; height: 60px; width: 60px;
+            background: white; border-radius: 50px;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden; display: flex; align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .search-container:hover { width: 600px; }
+        .search-container input { 
+            flex: 1; border: none; padding: 0; width: 0; font-size: 18px; outline: none; opacity: 0; transition: all 0.4s ease;
+        }
+        .search-container:hover input { padding: 15px 25px; width: 100%; opacity: 1; }
+        .search-btn { 
+            background: var(--secondary); color: white; border: none; min-width: 50px; height: 50px; border-radius: 50%; cursor: pointer; font-size: 18px; margin: 5px; display: flex; align-items: center; justify-content: center;
+        }
+
+        .pill-container { display: flex; justify-content: center; gap: 20px; margin-bottom: 50px; }
+        .pill-link { background: white; color: var(--text); padding: 10px 35px; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 18px; transition: 0.2s; cursor: pointer; }
+        .pill-link:hover { background: var(--secondary); color: white; transform: translateY(-5px); }
+
+        .wave-container { position: absolute; bottom: 0; left: 0; width: 100%; line-height: 0; }
+        .wave-container svg { position: relative; display: block; width: calc(100% + 1.3px); height: 100px; }
+        .wave-container .shape-fill { fill: var(--mint); }
+
+        /* --- CONTENT SECTIONS --- */
+        .card-section {
+            padding: 100px 10%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 50px;
+            flex-wrap: wrap;
+        }
+
+        .card-content-box { flex: 1; min-width: 300px; }
+        .card-content-box h2 { font-size: 55px; font-weight: 900; margin-bottom: 10px; line-height: 1.1; }
+        .card-content-box p { font-size: 20px; font-weight: 700; margin-bottom: 40px; }
+
+        .pill-stack { display: flex; flex-direction: column; gap: 15px; }
+        .pill {
+            width: 280px; padding: 14px 0; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 20px; text-align: center; transition: 0.3s; cursor: pointer;
+        }
+        .pill:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .pill.emerald { background: var(--secondary); color: white; }
+        .pill.dark { background: var(--text); color: white; }
+        .pill.pink { background: var(--pink); color: var(--text); }
+
+        /* --- INTERACTIVE CIRCLE CARDS --- */
+        .interactive-card {
+            position: relative; width: 250px; height: 250px;
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.3s ease, width 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55), height 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55), border-radius 0.6s;
+            overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            cursor: pointer;
+        }
+
+        .os-card { background: var(--primary); border-radius: 50%; }
+        .ai-card { background: var(--ai-accent); border-radius: 50%; }
+        .interactive-card:hover { width: 480px; height: 280px; border-radius: 30px; transform: translateY(-10px); }
+
+        .icon-box i { font-size: 80px; color: var(--secondary); transition: 0.5s; }
+        .ai-card .icon-box i { color: var(--yellow); }
+
+        .os-card:hover .icon-box { transform: translateX(-140px) scale(0.8); }
+        .ai-card:hover .icon-box { transform: translateX(140px) scale(0.8); }
+
+        .reveal-data {
+            position: absolute; width: 240px; opacity: 0; transition: 0.5s ease; color: white;
+        }
+
+        .os-card .reveal-data { right: -250px; }
+        .os-card:hover .reveal-data { right: 40px; opacity: 1; }
+
+        .ai-card .reveal-data { left: -250px; }
+        .ai-card:hover .reveal-data { left: 40px; opacity: 1; }
+
+        .mini-algo { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+        .algo-track { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
+        .algo-fill { height: 100%; background: var(--secondary); width: 0; }
+        .ai-card .algo-fill { background: var(--yellow); }
+
+        .interactive-card:hover .f1 { animation: run 1.2s infinite alternate; }
+        .interactive-card:hover .f2 { animation: run 1.2s infinite alternate-reverse 0.2s; }
+        .interactive-card:hover .f3 { animation: run 1.2s infinite alternate 0.4s; }
+
+        @keyframes run { from { width: 10%; } to { width: 90%; } }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <div class="logo-area">
+            <div style="font-size: 24px; font-weight: 900; color: var(--primary);">
+                <i class="fas fa-code"></i> AlgoLogic
+            </div>
+            <ul class="top-links">
+                <li><a onclick="toggleOverlay('tutorialOverlay')">Tutorials <i class="fas fa-caret-down"></i></a></li>
+                <li><a onclick="toggleOverlay('referenceOverlay')">References <i class="fas fa-caret-down"></i></a></li>
+                <li><a onclick="openExercises()">Exercises <i class="fas fa-caret-down"></i></a></li>
+            </ul>
+        </div>
+        <div class="right-actions">
+            <a href="#" class="sign-in-btn">Sign In</a>
+        </div>
+    </nav>
+
+    <div id="tutorialOverlay" class="tutorial-overlay">
+        <span class="close-btn" onclick="toggleOverlay('tutorialOverlay')" style="font-size: 30px; top: 10px; right: 20px;">&times;</span>
+        <div class="overlay-header-bar">Learning Tracks</div>
+        <div class="overlay-content">
+            <div class="overlay-column">
+                <h3>Operating Systems</h3>
+                <ul>
+                    <li><span>1.</span> <a href="osy-theory.html">Full OS Course</a></li>
+                    <li><span>2.</span> <a href="#">Kernel Architecture</a></li>
+                </ul>
+            </div>
+            <div class="overlay-column">
+                <h3>AI & Machine Learning</h3>
+                <ul>
+                    <li><span>1.</span> <a href="aiml-theory.html">AI Foundations</a></li>
+                    <li><span>2.</span> <a href="#">Neural Networks</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="referenceOverlay" class="tutorial-overlay">
+        <span class="close-btn" onclick="toggleOverlay('referenceOverlay')" style="font-size: 30px; top: 10px; right: 20px;">&times;</span>
+        <div class="overlay-header-bar">Quick References</div>
+        <div class="overlay-content">
+            <p style="text-align: center; width: 100%;">Reference guides coming soon...</p>
+        </div>
+    </div>
+
+    <div id="exercises-overlay">
+        <span class="close-btn" onclick="closeExercises()">&times;</span>
+        <div class="exercise-header">
+            <h2>Exercises</h2>
+            <p>Master complex logic through hands-on practice</p>
+        </div>
+        <div class="exercise-container">
+            <div class="exercise-card osy">
+                <h3>OSY Exercises</h3>
+                <ul class="ex-list">
+                    <li class="ex-item">
+                        <span><i class="fas fa-microchip"></i> CPU Scheduling</span>
+                        <a href="#" class="start-link">Practice Now</a>
+                    </li>
+                    <li class="ex-item">
+                        <span><i class="fas fa-memory"></i> Page Replacement</span>
+                        <a href="#" class="start-link">Practice Now</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="exercise-card aiml">
+                <h3>AIML Exercises</h3>
+                <ul class="ex-list">
+                    <li class="ex-item">
+                        <span><i class="fas fa-network-wired"></i> Neural Networks</span>
+                        <a href="#" class="start-link">Practice Now</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="index.html">Home</a>
+        <a href="about.html">About Us</a>
+        <a href="contactus.html">Contact Us</a>
+        <a href="feedback.html">Feedback</a>
+    </nav>
+
+    <section class="hero">
+        <h1>MASTERING OS & AI</h1>
+        <p>Learning hard concepts made easier</p>
+        <div class="search-wrapper">
+            <div class="search-container">
+                <input type="text" placeholder="Search our tutorials, e.g. Process Sync...">
+                <button class="search-btn"><i class="fas fa-search"></i></button>
+            </div>
+        </div>
+        <div class="pill-container">
+            <a href="#" class="pill-link">Learning</a>
+            <a href="#" class="pill-link">Animations</a>
+            <a href="#" class="pill-link">Quiz</a>
+        </div>
+        <div class="wave-container">
+            <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V95.8C58.47,105.1,123,103,184.7,85.12,242,68.52,274.19,65.17,321.39,56.44Z" class="shape-fill"></path>
+            </svg>
+        </div>
+    </section>
+
+    <section class="card-section" style="background-color: var(--mint);">
+        <div class="card-content-box" style="text-align: left;">
+            <h2>Operating System</h2>
+            <p>Explore Process, Memory, and File Management</p>
+            <div class="pill-stack" style="align-items: flex-start;">
+                <a href="osy-theory.html" class="pill emerald">Learn OSY</a>
+                <a href="#" class="pill dark">Animations</a>
+                <a href="#" class="pill pink">Quiz</a>
+            </div>
+        </div>
+        <div class="os-card interactive-card">
+            <div class="icon-box"><i class="fas fa-microchip"></i></div>
+            <div class="reveal-data">
+                <h3 style="color: var(--secondary); font-size: 24px; margin-bottom: 5px;">Kernel Active</h3>
+                <div class="mini-algo">
+                    <div class="algo-track"><div class="algo-fill f1"></div></div>
+                    <div class="algo-track"><div class="algo-fill f2"></div></div>
+                    <div class="algo-track"><div class="algo-fill f3"></div></div>
+                </div>
+                <p style="font-size: 14px; margin-top: 10px;">Simulating Priority Scheduling...</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="card-section" style="background-color: var(--yellow);">
+        <div class="ai-card interactive-card">
+            <div class="icon-box"><i class="fas fa-robot"></i></div>
+            <div class="reveal-data">
+                <h3 style="color: var(--yellow); font-size: 24px; margin-bottom: 5px;">AI Processing</h3>
+                <div class="mini-algo">
+                    <div class="algo-track"><div class="algo-fill f1"></div></div>
+                    <div class="algo-track"><div class="algo-fill f2"></div></div>
+                    <div class="algo-track"><div class="algo-fill f3"></div></div>
+                </div>
+                <p style="font-size: 14px; margin-top: 10px;">Computing Neural Weights...</p>
+            </div>
+        </div>
+        <div class="card-content-box" style="text-align: right;">
+            <h2>Artificial Intelligence</h2>
+            <p>Where data meets intelligence</p>
+            <div class="pill-stack" style="align-items: flex-end;">
+                <a href="aiml-theory.html" class="pill emerald">Learn AI/ML</a>
+                <a href="#" class="pill dark">animation</a>
+                <a href="#" class="pill pink">Quiz</a>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        function toggleOverlay(id) {
+            const overlay = document.getElementById(id);
+            const isVisible = overlay.style.display === "block";
+            
+            // Close all overlays
+            document.querySelectorAll('.tutorial-overlay, #exercises-overlay').forEach(el => el.style.display = 'none');
+            
+            overlay.style.display = isVisible ? "none" : "block";
+            document.body.style.overflow = isVisible ? "auto" : "hidden";
+        }
+
+        function openExercises() {
+            document.querySelectorAll('.tutorial-overlay').forEach(el => el.style.display = 'none');
+            document.getElementById("exercises-overlay").style.display = "block";
+            document.body.style.overflow = "hidden";
+        }
+
+        function closeExercises() {
+            document.getElementById("exercises-overlay").style.display = "none";
+            document.body.style.overflow = "auto";
+        }
+    </script>
+</body>
+</html>

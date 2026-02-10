@@ -1,18 +1,32 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Source+Sans+Pro:wght@400;600;700;900&display=swap');
 @import "tailwindcss";
 
 :root {
-  --bg-primary: #0a0a0f;
-  --bg-secondary: #12121a;
-  --bg-tertiary: #1a1a24;
-  --accent-primary: #00d9ff;
-  --accent-secondary: #7c3aed;
-  --accent-tertiary: #10b981;
-  --text-primary: #f0f0f5;
-  --text-secondary: #a0a0b0;
-  --text-muted: #606070;
-  --border-color: #2a2a3a;
-  --success: #10b981;
+  /* AlgoLogic theme (FINALYPRO) - default app theme */
+  --alg-primary: #064E3B;
+  --alg-secondary: #10B981;
+  --alg-bg: #F9FAFB;
+  --alg-text: #111827;
+  --alg-white: #ffffff;
+  --alg-mint: #D1FAE5;
+  --alg-yellow: #FFF4A3;
+  --alg-pink: #FFC0C7;
+  --alg-ai-accent: #8B8000;
+  --alg-overlay-bg: #282a35;
+  --alg-bottom-nav: #043a2c;
+  --alg-header-bar: #022c22;
+  /* Map global tokens to AlgoLogic */
+  --bg-primary: var(--alg-bg);
+  --bg-secondary: var(--alg-white);
+  --bg-tertiary: var(--alg-mint);
+  --accent-primary: var(--alg-primary);
+  --accent-secondary: var(--alg-secondary);
+  --accent-tertiary: var(--alg-secondary);
+  --text-primary: var(--alg-text);
+  --text-secondary: #374151;
+  --text-muted: #6b7280;
+  --border-color: #e5e7eb;
+  --success: var(--alg-secondary);
   --warning: #f59e0b;
   --error: #ef4444;
 }
@@ -36,7 +50,7 @@
 @theme inline {
   --color-background: var(--bg-primary);
   --color-foreground: var(--text-primary);
-  --font-sans: 'Space Grotesk', sans-serif;
+  --font-sans: 'Source Sans 3', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 }
 
@@ -47,13 +61,13 @@
 body {
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Source Sans 3', 'Source Sans Pro', sans-serif;
   min-height: 100vh;
 }
 
 ::selection {
-  background: var(--accent-primary);
-  color: var(--bg-primary);
+  background: var(--alg-secondary);
+  color: var(--alg-white);
 }
 
 ::-webkit-scrollbar {
@@ -118,13 +132,7 @@ body {
 
 .grid-pattern {
   background-image: 
-    linear-gradient(rgba(0, 217, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 217, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(rgba(6, 78, 59, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6, 78, 59, 0.06) 1px, transparent 1px);
   background-size: 50px 50px;
-}
-
-[data-theme="light"] .grid-pattern {
-  background-image: 
-    linear-gradient(rgba(2, 132, 199, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(2, 132, 199, 0.05) 1px, transparent 1px);
 }

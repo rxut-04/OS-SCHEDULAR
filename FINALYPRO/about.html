@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us | AlgoLogic</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #064E3B;   /* Matching your Forest Green */
+            --secondary: #10B981; /* Matching your Emerald */
+            --bg: #F9FAFB;
+            --text: #111827;
+            --mint: #D1FAE5;
+        }
+
+        body {
+            font-family: 'Source Sans Pro', sans-serif;
+            background-color: var(--primary); /* Dark green background for impact */
+            color: white;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .about-card {
+            background: white;
+            color: var(--text);
+            max-width: 800px;
+            margin: 20px;
+            padding: 50px;
+            border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .about-card h1 {
+            color: var(--primary);
+            font-size: 45px;
+            font-weight: 900;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .about-card p {
+            font-size: 19px;
+            line-height: 1.8;
+            color: #374151;
+            margin-bottom: 30px;
+            text-align: justify;
+        }
+
+        .highlight {
+            color: var(--secondary);
+            font-weight: 700;
+        }
+
+        .back-btn {
+            display: inline-block;
+            background: var(--secondary);
+            color: white;
+            padding: 12px 35px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 40px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 30px;
+        }
+
+        .stat-item h3 { color: var(--primary); margin-bottom: 5px; }
+        .stat-item p { font-size: 14px; margin: 0; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div class="about-card">
+        <h1>About <span class="highlight">AlgoLogic</span></h1>
+        
+        <p>
+            AlgoLogic was born out of a mission to demystify the most challenging pillars of Computer Science: <strong>Operating Systems</strong> and <strong>Artificial Intelligence</strong>. We recognized that while textbooks provide exhaustive technical data, they often lack the intuitive clarity required for true mastery. 
+            <br><br>
+            Our platform serves as a specialized pedagogical tool that transforms abstract concepts—such as process synchronization and neural network architectures—into digestible, visual, and interactive learning modules. By combining rigorous academic standards with modern UI/UX principles, AlgoLogic empowers students to move beyond rote memorization toward a deeper, functional understanding of core computing logic.
+        </p>
+
+        <div class="stats-grid">
+            <div class="stat-item">
+                <h3>OSY</h3>
+                <p>Conceptual Depth</p>
+            </div>
+            <div class="stat-item">
+                <h3>AIML</h3>
+                <p>Data Logic</p>
+            </div>
+            <div class="stat-item">
+                <h3>Visuals</h3>
+                <p>Interactive Learning</p>
+            </div>
+        </div>
+
+        <br><br>
+        <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Home</a>
+    </div>
+
+</body>
+</html>

@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
-import { Lexend } from "next/font/google";
+import { Source_Sans_3 } from "next/font/google";
 import "./globals.css";
-import { HelixBackground } from "@/components/ui/helix-hero";
 
-const lexend = Lexend({ subsets: ["latin"] });
+const sourceSans = Source_Sans_3({
+  subsets: ["latin"],
+  weight: ["400", "600", "700", "900"],
+});
 
 export const metadata: Metadata = {
-  title: "AlgoViz OS - Operating System Algorithm Visualizer",
-  description: "Interactive educational platform for visualizing Operating System algorithms including CPU Scheduling, Disk Scheduling, Memory Management, and Page Replacement",
+  title: "AlgoLogic - Mastering OS & AI",
+  description: "Learning hard concepts made easier. Interactive platform for Operating System and AI/ML algorithms.",
 };
 
 export default function RootLayout({
@@ -17,8 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${lexend.className} antialiased`} suppressHydrationWarning>
-        <HelixBackground />
+      <body className={`${sourceSans.className} antialiased`} suppressHydrationWarning>
         {children}
       </body>
     </html>

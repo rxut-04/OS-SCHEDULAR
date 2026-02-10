@@ -8,14 +8,15 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex h-screen w-full bg-transparent text-white overflow-hidden">
-      {/* New Two-Level Sidebar */}
+    <div
+      className="flex h-screen w-full overflow-hidden"
+      style={{ background: 'var(--alg-bg)', color: 'var(--alg-text)' }}
+    >
       <div className="h-full shrink-0 z-50">
         <TwoLevelSidebar />
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 h-full overflow-y-auto bg-[#0B0F14] relative z-0">
+      <div className="flex-1 h-full overflow-y-auto relative z-0" style={{ background: 'var(--alg-bg)' }}>
         <main className="p-6 min-h-full">
           {children}
         </main>

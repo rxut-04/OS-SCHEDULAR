@@ -33,7 +33,7 @@ const Screen1Intro = ({ onStart }: { onStart: () => void }) => (
       <Education size={64} className="text-blue-400" />
     </div>
     <div className="space-y-4">
-      <h1 className="text-4xl font-bold text-white">Operating Systems</h1>
+      <h1 className="text-4xl font-bold">Operating Systems</h1>
       <h2 className="text-2xl text-blue-400 font-light">Memory & Scheduling Quiz</h2>
       <p className="text-neutral-400 max-w-lg mx-auto">
         Test your knowledge on core OS concepts. This quiz covers key topics to prepare you for exams and interviews.
@@ -41,15 +41,15 @@ const Screen1Intro = ({ onStart }: { onStart: () => void }) => (
     </div>
 
     <div className="grid grid-cols-2 gap-4 w-full max-w-md">
-      <div className="bg-white/5 p-4 rounded-xl border border-white/10 text-left">
-        <h3 className="text-white font-semibold mb-2 flex items-center gap-2"><Checkmark size={16} className="text-green-400"/> Topics</h3>
-        <ul className="text-sm text-neutral-400 space-y-1">
+      <div className="p-4 rounded-xl border text-left" style={{ background: 'var(--alg-white)', borderColor: 'var(--border-color)' }}>
+        <h3 className="font-semibold mb-2 flex items-center gap-2"><Checkmark size={16} className="text-green-500"/> Topics</h3>
+        <ul className="text-sm text-neutral-600 space-y-1">
           {TOPICS.map(t => <li key={t}>• {t}</li>)}
         </ul>
       </div>
-      <div className="bg-white/5 p-4 rounded-xl border border-white/10 text-left">
-        <h3 className="text-white font-semibold mb-2 flex items-center gap-2"><Time size={16} className="text-yellow-400"/> Details</h3>
-        <ul className="text-sm text-neutral-400 space-y-1">
+      <div className="p-4 rounded-xl border text-left" style={{ background: 'var(--alg-white)', borderColor: 'var(--border-color)' }}>
+        <h3 className="font-semibold mb-2 flex items-center gap-2"><Time size={16} className="text-yellow-600"/> Details</h3>
+        <ul className="text-sm text-neutral-600 space-y-1">
           <li>• Total Questions: Customizable</li>
           <li>• Time Limit: Optional</li>
           <li>• Format: MCQ</li>
@@ -86,16 +86,16 @@ const Screen2Settings = ({ onBegin }: { onBegin: (settings: QuizSettings) => voi
   return (
     <motion.div 
       initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-      className="max-w-3xl mx-auto bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-3xl"
-    >
-      <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3">
+      className="max-w-3xl mx-auto p-8 rounded-3xl border"
+style={{ background: 'var(--alg-white)', borderColor: 'var(--border-color)' }}>
+      <h2 className="text-3xl font-bold mb-8 flex items-center gap-3">
         <Settings size={32} className="text-purple-400"/> Quiz Configuration
       </h2>
 
       <div className="space-y-8">
         {/* Difficulty */}
         <div className="space-y-3">
-          <label className="text-neutral-300 font-medium">Difficulty Level</label>
+          <label className="text-neutral-700 font-medium">Difficulty Level</label>
           <div className="flex gap-4">
             {(['Easy', 'Medium', 'Hard'] as Difficulty[]).map((level) => (
               <button
@@ -105,7 +105,7 @@ const Screen2Settings = ({ onBegin }: { onBegin: (settings: QuizSettings) => voi
                   "flex-1 py-3 rounded-xl border transition-all font-medium",
                   difficulty === level 
                     ? "bg-purple-500/20 border-purple-500 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.3)]" 
-                    : "bg-white/5 border-white/10 text-neutral-400 hover:bg-white/10"
+                    : "bg-[var(--alg-mint)]/50 border-[var(--border-color)] text-neutral-700 hover:bg-[var(--alg-mint)]"
                 )}
               >
                 {level}
@@ -117,7 +117,7 @@ const Screen2Settings = ({ onBegin }: { onBegin: (settings: QuizSettings) => voi
         {/* Question Count */}
         <div className="space-y-3">
           <div className="flex justify-between">
-            <label className="text-neutral-300 font-medium">Number of Questions</label>
+            <label className="text-neutral-700 font-medium">Number of Questions</label>
             <span className="text-purple-400 font-bold">{count}</span>
           </div>
           <input 
@@ -129,7 +129,7 @@ const Screen2Settings = ({ onBegin }: { onBegin: (settings: QuizSettings) => voi
 
         {/* Topics */}
         <div className="space-y-3">
-          <label className="text-neutral-300 font-medium">Topics Covered</label>
+          <label className="text-neutral-700 font-medium">Topics Covered</label>
           <div className="grid grid-cols-2 gap-3">
             {TOPICS.map(topic => (
               <div 
@@ -139,7 +139,7 @@ const Screen2Settings = ({ onBegin }: { onBegin: (settings: QuizSettings) => voi
                   "p-3 rounded-xl border cursor-pointer flex items-center gap-3 transition-all",
                   selectedTopics.includes(topic)
                     ? "bg-blue-500/10 border-blue-500/50 text-blue-300"
-                    : "bg-white/5 border-white/10 text-neutral-500"
+                    : "bg-[var(--alg-mint)]/30 border-[var(--border-color)] text-neutral-600"
                 )}
               >
                 {selectedTopics.includes(topic) ? <Checkmark size={16} /> : <div className="w-4 h-4"/>}
@@ -150,10 +150,10 @@ const Screen2Settings = ({ onBegin }: { onBegin: (settings: QuizSettings) => voi
         </div>
 
         {/* Timer */}
-        <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
+        <div className="flex items-center justify-between p-4 rounded-xl border" style={{ background: 'var(--alg-mint)', borderColor: 'var(--border-color)' }}>
           <div className="flex items-center gap-3">
-            <Time size={20} className="text-orange-400"/>
-            <span className="text-neutral-300">Enable Timer</span>
+            <Time size={20} className="text-orange-500"/>
+            <span className="text-neutral-700">Enable Timer</span>
           </div>
           <button 
             onClick={() => setTimer(!timer)}
@@ -237,7 +237,7 @@ const Screen3Quiz = ({
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div className="text-neutral-400">
-          Question <span className="text-white font-bold text-xl">{currentIndex + 1}</span> of {questions.length}
+          Question <span className="font-bold text-xl">{currentIndex + 1}</span> of {questions.length}
         </div>
         {settings.timerEnabled && (
           <div className="bg-neutral-800 px-4 py-2 rounded-lg font-mono text-orange-400 flex items-center gap-2">
@@ -260,7 +260,7 @@ const Screen3Quiz = ({
         initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }}
         className="flex-1"
       >
-        <h2 className="text-2xl font-semibold text-white mb-8 leading-relaxed">
+        <h2 className="text-2xl font-semibold mb-8 leading-relaxed">
           {currentQ.text}
         </h2>
 
@@ -273,7 +273,7 @@ const Screen3Quiz = ({
                 "w-full p-4 rounded-xl border text-left transition-all flex items-center gap-4 group",
                 currentAnswer === idx 
                   ? "bg-blue-600 border-blue-500 text-white shadow-lg" 
-                  : "bg-white/5 border-white/10 text-neutral-300 hover:bg-white/10"
+                  : "bg-[var(--alg-white)] border-[var(--border-color)] text-neutral-700 hover:bg-[var(--alg-mint)]"
               )}
             >
               <div className={cn(
@@ -289,12 +289,12 @@ const Screen3Quiz = ({
       </motion.div>
 
       {/* Footer Controls */}
-      <div className="mt-8 flex justify-between items-center border-t border-white/10 pt-6">
+      <div className="mt-8 flex justify-between items-center border-t pt-6" style={{ borderColor: 'var(--border-color)' }}>
         <button 
           onClick={toggleFlag}
           className={cn(
             "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors",
-            flagged.includes(currentQ.id) ? "text-yellow-400 bg-yellow-400/10" : "text-neutral-500 hover:text-neutral-300"
+            flagged.includes(currentQ.id) ? "text-yellow-600 bg-yellow-100" : "text-neutral-500 hover:text-neutral-700"
           )}
         >
           <Flag size={16} /> {flagged.includes(currentQ.id) ? 'Flagged' : 'Flag for Review'}
@@ -304,7 +304,8 @@ const Screen3Quiz = ({
           <button 
             onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
             disabled={currentIndex === 0}
-            className="px-6 py-2 rounded-lg bg-neutral-800 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-700 transition-colors"
+            className="px-6 py-2 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      style={{ background: 'var(--alg-primary)' }}
           >
             Previous
           </button>
@@ -351,29 +352,30 @@ const Screen4Confirmation = ({
     </div>
     
     <div className="space-y-2">
-      <h2 className="text-3xl font-bold text-white">Submit Quiz?</h2>
+      <h2 className="text-3xl font-bold">Submit Quiz?</h2>
       <p className="text-neutral-400">Are you sure you want to finish the assessment?</p>
     </div>
 
-    <div className="bg-white/5 p-6 rounded-2xl border border-white/10 w-full max-w-sm">
+    <div className="p-6 rounded-2xl border w-full max-w-sm" style={{ background: 'var(--alg-white)', borderColor: 'var(--border-color)' }}>
       <div className="flex justify-between items-center mb-2">
         <span className="text-neutral-400">Total Questions</span>
-        <span className="text-white font-bold">{total}</span>
+        <span className="font-bold">{total}</span>
       </div>
       <div className="flex justify-between items-center mb-2">
         <span className="text-green-400">Attempted</span>
-        <span className="text-white font-bold">{attempted}</span>
+        <span className="font-bold">{attempted}</span>
       </div>
       <div className="flex justify-between items-center">
         <span className="text-red-400">Unattempted</span>
-        <span className="text-white font-bold">{total - attempted}</span>
+        <span className="font-bold">{total - attempted}</span>
       </div>
     </div>
 
     <div className="flex gap-4 w-full max-w-sm">
       <button 
         onClick={onBack}
-        className="flex-1 py-3 rounded-xl bg-neutral-800 text-white hover:bg-neutral-700 transition-colors"
+        className="flex-1 py-3 rounded-xl text-white transition-colors"
+      style={{ background: 'var(--alg-primary)' }}
       >
         Go Back
       </button>
@@ -409,7 +411,7 @@ const Screen5Result = ({
       className="max-w-2xl mx-auto h-full flex flex-col items-center justify-center space-y-8"
     >
       <div className="text-center space-y-2">
-        <h2 className="text-4xl font-bold text-white">Quiz Completed!</h2>
+        <h2 className="text-4xl font-bold">Quiz Completed!</h2>
         <p className="text-neutral-400">Here is how you performed</p>
       </div>
 
@@ -434,16 +436,16 @@ const Screen5Result = ({
 
       {/* Stats Grid */}
       <div className="grid grid-cols-3 gap-4 w-full">
-        <div className="bg-white/5 p-4 rounded-xl border border-white/10 text-center">
-          <p className="text-neutral-400 text-xs uppercase tracking-wider mb-1">Correct</p>
+        <div className="p-4 rounded-xl border text-center" style={{ background: 'var(--alg-white)', borderColor: 'var(--border-color)' }}>
+          <p className="text-neutral-600 text-xs uppercase tracking-wider mb-1">Correct</p>
           <p className="text-2xl font-bold text-green-400">{correctCount}</p>
         </div>
-        <div className="bg-white/5 p-4 rounded-xl border border-white/10 text-center">
-          <p className="text-neutral-400 text-xs uppercase tracking-wider mb-1">Wrong</p>
+        <div className="p-4 rounded-xl border text-center" style={{ background: 'var(--alg-white)', borderColor: 'var(--border-color)' }}>
+          <p className="text-neutral-600 text-xs uppercase tracking-wider mb-1">Wrong</p>
           <p className="text-2xl font-bold text-red-400">{answers.length - correctCount}</p>
         </div>
-        <div className="bg-white/5 p-4 rounded-xl border border-white/10 text-center">
-          <p className="text-neutral-400 text-xs uppercase tracking-wider mb-1">Time</p>
+        <div className="p-4 rounded-xl border text-center" style={{ background: 'var(--alg-white)', borderColor: 'var(--border-color)' }}>
+          <p className="text-neutral-600 text-xs uppercase tracking-wider mb-1">Time</p>
           <p className="text-2xl font-bold text-blue-400">{timeTaken}</p>
         </div>
       </div>
@@ -471,7 +473,7 @@ const Screen6Analysis = ({
   return (
     <div className="max-w-4xl mx-auto h-full flex flex-col">
       <div className="flex justify-between items-center mb-8">
-        <h2 className="text-2xl font-bold text-white">Detailed Analysis</h2>
+        <h2 className="text-2xl font-bold">Detailed Analysis</h2>
         <button 
           onClick={onNext}
           className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors"
@@ -482,21 +484,21 @@ const Screen6Analysis = ({
 
       <div className="flex-1 overflow-y-auto pr-2 space-y-6">
         {/* Insights Box */}
-        <div className="bg-gradient-to-br from-purple-900/30 to-blue-900/30 p-6 rounded-2xl border border-white/10 mb-8">
-          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+        <div className="p-6 rounded-2xl border mb-8" style={{ background: 'var(--alg-mint)', borderColor: 'var(--border-color)' }}>
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
             <Result size={20} /> Performance Insights
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <p className="text-green-400 text-sm font-bold mb-2 uppercase">Strengths</p>
-              <ul className="list-disc list-inside text-neutral-300 text-sm space-y-1">
+              <ul className="list-disc list-inside text-neutral-600 text-sm space-y-1">
                 <li>Strong understanding of CPU Scheduling</li>
                 <li>Good accuracy in theoretical concepts</li>
               </ul>
             </div>
             <div>
               <p className="text-orange-400 text-sm font-bold mb-2 uppercase">Suggestions</p>
-              <ul className="list-disc list-inside text-neutral-300 text-sm space-y-1">
+              <ul className="list-disc list-inside text-neutral-600 text-sm space-y-1">
                 <li>Revise First Fit, Best Fit concepts</li>
                 <li>Practice more on Page Replacement algorithms</li>
               </ul>
@@ -511,9 +513,9 @@ const Screen6Analysis = ({
             const isCorrect = userAnswer?.selectedOption === q.correctAnswer;
             
             return (
-              <div key={q.id} className="bg-white/5 p-6 rounded-xl border border-white/10">
+              <div key={q.id} className="p-6 rounded-xl border" style={{ background: 'var(--alg-white)', borderColor: 'var(--border-color)' }}>
                 <div className="flex justify-between items-start mb-4">
-                  <h4 className="text-white font-medium text-lg flex-1">
+                  <h4 className="font-medium text-lg flex-1">
                     <span className="text-neutral-500 mr-2">{idx + 1}.</span> {q.text}
                   </h4>
                   <span className={cn(
@@ -564,13 +566,13 @@ const Screen7Final = ({
       initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
       className="max-w-3xl mx-auto h-full flex flex-col items-center justify-center space-y-8"
     >
-      <div className="w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
-        <div className="flex items-center gap-4 mb-8 border-b border-white/10 pb-6">
+      <div className="w-full rounded-3xl p-8 border shadow-sm" style={{ background: 'var(--alg-white)', borderColor: 'var(--border-color)' }}>
+        <div className="flex items-center gap-4 mb-8 border-b pb-6" style={{ borderColor: 'var(--border-color)' }}>
           <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-2xl font-bold text-white">
             U
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-white">User Profile</h2>
+            <h2 className="text-2xl font-bold">User Profile</h2>
             <p className="text-neutral-400">ID: OS-STUDENT-2024</p>
           </div>
           <div className="ml-auto text-right">
@@ -581,7 +583,7 @@ const Screen7Final = ({
 
         <div className="space-y-6">
           <div>
-            <h3 className="text-white font-bold mb-4">Performance Summary</h3>
+            <h3 className="font-bold mb-4">Performance Summary</h3>
             <div className="h-4 bg-neutral-800 rounded-full overflow-hidden">
               <div className="h-full bg-gradient-to-r from-blue-500 to-green-500" style={{ width: `${score}%` }} />
             </div>
@@ -594,13 +596,13 @@ const Screen7Final = ({
 
           <div className="bg-blue-500/10 p-6 rounded-xl border border-blue-500/20">
             <h4 className="text-blue-300 font-bold mb-2">Recommendation</h4>
-            <p className="text-neutral-300 text-sm">
+            <p className="text-neutral-600 text-sm">
               User understands OS basics but needs improvement in memory management. Recommended to review the paging and segmentation visualization modules.
             </p>
           </div>
 
           <div className="flex gap-4 mt-8">
-            <button className="flex-1 py-3 bg-neutral-800 text-white rounded-xl font-bold hover:bg-neutral-700 transition-all flex justify-center items-center gap-2">
+            <button className="flex-1 py-3 text-white rounded-xl font-bold transition-all flex justify-center items-center gap-2" style={{ background: 'var(--alg-primary)' }}>
               <Download size={18} /> Download Report
             </button>
             <button 
@@ -655,7 +657,7 @@ export default function QuizPage() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent p-6 text-white font-['Lexend:Regular',_sans-serif]">
+    <div className="min-h-screen bg-transparent p-6 font-['Lexend:Regular',_sans-serif]" style={{ color: 'var(--alg-text)' }}>
       <AnimatePresence mode="wait">
         {step === 1 && <Screen1Intro key="1" onStart={handleStart} />}
         {step === 2 && <Screen2Settings key="2" onBegin={handleBegin} />}

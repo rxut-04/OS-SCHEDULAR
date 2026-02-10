@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us | AlgoLogic</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #064E3B;
+            --secondary: #10B981;
+            --mint: #D1FAE5;
+            --bg: #F9FAFB;
+        }
+
+        body {
+            font-family: 'Source Sans Pro', sans-serif;
+            background-color: var(--primary);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .contact-container {
+            width: 90%;
+            max-width: 1000px;
+            background: white;
+            display: flex;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+
+        /* Left side: Info */
+        .contact-info {
+            flex: 1;
+            background-color: var(--mint);
+            padding: 50px;
+            color: var(--primary);
+        }
+
+        .contact-info h2 { font-size: 32px; font-weight: 900; margin-bottom: 20px; }
+        .contact-info p { line-height: 1.6; font-size: 16px; margin-bottom: 30px; text-align: justify; }
+
+        .info-details { list-style: none; padding: 0; }
+        .info-details li { margin-bottom: 20px; display: flex; align-items: center; gap: 15px; font-weight: 600; }
+        .info-details i { color: var(--secondary); font-size: 20px; }
+
+        /* Right side: Form */
+        .contact-form {
+            flex: 1.2;
+            padding: 50px;
+            background: #ffffff;
+        }
+
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 700; margin-bottom: 8px; color: var(--primary); }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            outline: none;
+            transition: 0.3s;
+            font-family: inherit;
+        }
+        input:focus, textarea:focus { border-color: var(--secondary); }
+
+        .submit-btn {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            font-size: 17px;
+            transition: 0.3s;
+        }
+        .submit-btn:hover { background: var(--primary); transform: translateY(-2px); }
+
+        .back-home {
+            display: block;
+            margin-top: 20px;
+            text-align: center;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .contact-container { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="contact-container">
+        <div class="contact-info">
+            <h2>Get in Touch</h2>
+            <p>At <strong>AlgoLogic</strong>, we believe that the evolution of educational tools depends on continuous feedback and academic collaboration. We welcome inquiries from students, developers, and faculty members regarding pedagogical improvements.</p>
+            
+            <ul class="info-details">
+                <li><i class="fas fa-envelope"></i> contact@algologic.edu</li>
+                <li><i class="fas fa-location-dot"></i> Computer Science Dept, University Campus</li>
+                <li><i class="fas fa-clock"></i> Mon - Fri, 9:00 AM - 5:00 PM</li>
+            </ul>
+        </div>
+
+        <div class="contact-form">
+            <form action="#">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" placeholder="Enter your name" required>
+                </div>
+                <div class="form-group">
+                    <label>Institutional Email</label>
+                    <input type="email" placeholder="email@university.edu" required>
+                </div>
+                <div class="form-group">
+                    <label>Subject</label>
+                    <input type="text" placeholder="Academic Inquiry / Feedback">
+                </div>
+                <div class="form-group">
+                    <label>Message</label>
+                    <textarea rows="4" placeholder="How can we assist your learning journey?"></textarea>
+                </div>
+                <button type="submit" class="submit-btn">Send Inquiry</button>
+                <a href="index.html" class="back-home">← Back to Dashboard</a>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>

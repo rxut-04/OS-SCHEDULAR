@@ -23,6 +23,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import Link from 'next/link';
+import { TheorySection } from '@/components/ui/theory-section';
 
 interface Frame {
   id: number;
@@ -750,6 +751,16 @@ export default function PageReplacementVisualizer() {
             </div>
           </div>
         </motion.div>
+
+        <div className="mb-6">
+          <TheorySection title="Theory: Page Replacement" defaultOpen={false}>
+            <p><strong>Page replacement</strong> is used when a page fault occurs and no free frame is available. The OS must choose a victim page to evict from memory.</p>
+            <p><strong>FIFO:</strong> Evicts the page that has been in memory longest. Simple but can cause Belady&apos;s anomaly (more frames can mean more faults).</p>
+            <p><strong>LRU (Least Recently Used):</strong> Evicts the page that has not been used for the longest time. Good practical performance; requires hardware support or approximation.</p>
+            <p><strong>Optimal:</strong> Evicts the page that will be used farthest in the future. Theoretically best but not implementable (requires future knowledge); used as a benchmark.</p>
+            <p><strong>LFU (Least Frequently Used):</strong> Evicts the page with the smallest reference count. Can favor recently brought-in pages that are used repeatedly.</p>
+          </TheorySection>
+        </div>
 
         <div className="flex flex-col lg:flex-row gap-4">
           <motion.div 

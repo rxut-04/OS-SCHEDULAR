@@ -21,6 +21,7 @@ import {
   Maximize2
 } from 'lucide-react';
 import Link from 'next/link';
+import { TheorySection } from '@/components/ui/theory-section';
 
 interface MemoryBlock {
   id: string;
@@ -654,6 +655,16 @@ export default function MemoryManagementVisualizer() {
             </div>
           </div>
         </motion.div>
+
+        <div className="mb-6">
+          <TheorySection title="Theory: Memory Allocation" defaultOpen={false}>
+            <p><strong>Memory management</strong> is the process of controlling and coordinating how the OS allocates and reclaims main memory (RAM) to processes.</p>
+            <p><strong>First Fit:</strong> Allocates the first free block that is large enough. Fast but can cause external fragmentation over time.</p>
+            <p><strong>Best Fit:</strong> Allocates the smallest free block that fits the request. Minimizes wasted space in the block but can create many small unusable fragments.</p>
+            <p><strong>Worst Fit:</strong> Allocates the largest free block. Leaves a large remainder that may be useful for future requests; generally less common in practice.</p>
+            <p><strong>Fixed vs variable partitioning:</strong> Fixed partitioning divides memory into fixed-size regions; variable partitioning allows variable-sized holes and is more flexible.</p>
+          </TheorySection>
+        </div>
 
         <div className="flex flex-col lg:flex-row gap-4">
           <motion.div 
