@@ -171,7 +171,7 @@ export function Header({ title, description }: { title?: string; description?: s
       >
         <Link href="/" className="flex items-center gap-2">
           <Image
-            src="/assets/logos/logo1.png"
+            src="/assets/logos/logo2.png"
             alt="AlgoLogic"
             width={32}
             height={32}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -54,6 +54,13 @@ function TopNav() {
     if (typeof document !== "undefined")
       document.body.style.overflow = !current ? "hidden" : "auto";
   };
+
+  // Restore body scroll when navigating away (e.g. clicking a Link inside an overlay)
+  useEffect(() => {
+    return () => {
+      if (typeof document !== "undefined") document.body.style.overflow = "auto";
+    };
+  }, []);
 
   return (
     <>
@@ -215,7 +222,14 @@ function TopNav() {
             >
               Quick References
             </div>
-            <p className="text-center w-full text-white/80">Reference guides coming soon...</p>
+            <p className="text-center w-full text-white/80 mb-6">All theory, modules, and practice links in one place.</p>
+            <Link
+              href="/references"
+              className="inline-flex items-center gap-2 py-3 px-6 rounded-full font-bold text-lg transition-all hover:scale-105"
+              style={{ background: ALGOLOGIC_STYLE.white, color: ALGOLOGIC_STYLE.primary }}
+            >
+              Open References Page
+            </Link>
           </motion.div>
         )}
       </AnimatePresence>
@@ -386,10 +400,11 @@ function HeroSection() {
       <p className="text-xl md:text-[22px] font-bold mb-6">Learning hard concepts made easier</p>
       <div className="flex justify-center mb-10">
         <Image
-          src="/assets/logos/logo1.png"
+          src="/assets/logos/logo2.png"
           alt="AlgoLogic"
-          width={80}
-          height={80}
+          width={120}
+          height={120}
+          priority
           className="rounded-xl object-contain"
         />
       </div>

@@ -75,7 +75,7 @@ function ThreeDViewContent() {
           
           <div className="hidden sm:flex items-center gap-2">
             <Image
-              src="/assets/logos/logo1.png"
+              src="/assets/logos/logo2.png"
               alt="Logo"
               width={32}
               height={32}

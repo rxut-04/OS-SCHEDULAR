@@ -16,7 +16,7 @@ export default function DashboardLayout({
         <TwoLevelSidebar />
       </div>
 
-      <div className="flex-1 h-full overflow-y-auto relative z-0" style={{ background: 'var(--alg-bg)' }}>
+      <div className="flex-1 h-full overflow-y-auto relative z-0" style={{ background: 'var(--alg-bg)', color: 'var(--alg-text)' }}>
         <main className="p-6 min-h-full">
           {children}
         </main>

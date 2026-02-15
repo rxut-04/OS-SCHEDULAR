@@ -39,7 +39,7 @@ export default function ContactPage() {
             </li>
           </ul>
         </div>
-        <div className="flex-[1.2] p-10 md:p-12 bg-white">
+        <div className="flex-[1.2] p-10 md:p-12 bg-white text-[var(--alg-text)]">
           {submitted ? (
             <div className="text-center py-8">
               <p className="text-lg font-semibold text-[var(--alg-secondary)] mb-4">

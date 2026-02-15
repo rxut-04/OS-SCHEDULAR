@@ -73,6 +73,13 @@ const OS_MODULES: Module[] = [
     image: '/assets/models/scheduling-queues.png',
     href: '/scheduling-queues',
   },
+  {
+    id: '08',
+    name: 'Disk Scheduling',
+    category: 'Storage',
+    image: '/assets/models/file-allocation.png',
+    href: '/disk-scheduling',
+  },
 ];
 
 const AIML_MODULES: Module[] = [

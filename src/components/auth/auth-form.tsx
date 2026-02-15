@@ -56,7 +56,7 @@ export function AuthForm({ view }: AuthFormProps) {
   return (
     <div
       className="w-full max-w-md p-8 rounded-2xl shadow-2xl"
-      style={{ background: 'var(--alg-white)', border: '1px solid var(--border-color)' }}
+      style={{ background: 'var(--alg-white)', border: '1px solid var(--border-color)', color: 'var(--alg-text)' }}
     >
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--alg-text)' }}>

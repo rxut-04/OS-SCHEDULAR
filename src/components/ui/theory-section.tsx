@@ -13,7 +13,7 @@ export function TheorySection({ title, children, defaultOpen = false }: TheorySe
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="rounded-xl border border-[var(--border-color)] overflow-hidden bg-[var(--bg-secondary)]">
+    <div className="rounded-xl border border-[var(--border-color)] overflow-hidden bg-[var(--bg-secondary)] text-[var(--alg-text)]">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}

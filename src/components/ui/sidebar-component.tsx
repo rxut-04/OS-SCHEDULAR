@@ -63,11 +63,11 @@ const softSpringEasing = "cubic-bezier(0.25, 1.1, 0.4, 1)";
 function InterfacesLogoSquare() {
   return (
      <Image 
-        src="https://cdn-icons-png.flaticon.com/512/12460/12460828.png" 
-        alt="AlgoViz OS Logo" 
+        src="/assets/logos/logo2.png" 
+        alt="AlgoLogic Logo" 
         width={32} 
         height={32} 
-        className="w-8 h-8 rounded-lg"
+        className="w-8 h-8 rounded-lg object-contain"
       />
   );
 }
@@ -120,7 +120,7 @@ function SearchContainer({ isCollapsed = false }: { isCollapsed?: boolean }) {
         className={`h-10 relative rounded-lg flex items-center transition-all duration-500 ${
           isCollapsed ? "w-10 min-w-10 justify-center" : "w-full"
         }`}
-        style={{ transitionTimingFunction: softSpringEasing, background: 'var(--alg-bg)', border: '1px solid var(--border-color)' }}
+        style={{ transitionTimingFunction: softSpringEasing, background: 'var(--alg-bg)', border: '1px solid var(--border-color)', color: 'var(--alg-text)' }}
       >
         <div
           className={`flex items-center justify-center shrink-0 transition-all duration-500 ${
@@ -235,7 +235,7 @@ function getSidebarContent(activeSection: string): SidebarContent {
           title: "Quizzes",
           items: [
             { icon: <Task size={16} className="text-[var(--alg-text)]" />, label: "Daily Quiz", href: "/dashboard/quiz" },
-            { icon: <Result size={16} className="text-[var(--alg-text)]" />, label: "Past Results" },
+            { icon: <Result size={16} className="text-[var(--alg-text)]" />, label: "Past Results", href: "/dashboard/results" },
           ],
         },
       ],
@@ -248,7 +248,7 @@ function getSidebarContent(activeSection: string): SidebarContent {
           title: "Stats",
           items: [
             { icon: <Analytics size={16} className="text-[var(--alg-text)]" />, label: "My Progress", href: "/dashboard/progress" },
-            { icon: <StarFilled size={16} className="text-[var(--alg-text)]" />, label: "Achievements" },
+            { icon: <StarFilled size={16} className="text-[var(--alg-text)]" />, label: "Achievements", href: "/dashboard/achievements" },
           ],
         },
       ],
@@ -260,8 +260,8 @@ function getSidebarContent(activeSection: string): SidebarContent {
         {
           title: "Account",
           items: [
-            { icon: <UserIcon size={16} className="text-[var(--alg-text)]" />, label: "Profile" },
-            { icon: <Security size={16} className="text-[var(--alg-text)]" />, label: "Security" },
+            { icon: <UserIcon size={16} className="text-[var(--alg-text)]" />, label: "Profile", href: "/dashboard/profile" },
+            { icon: <Security size={16} className="text-[var(--alg-text)]" />, label: "Security", href: "/dashboard/security" },
           ],
         },
       ],
@@ -317,7 +317,7 @@ function IconNavigation({
   ];
 
   return (
-    <aside className="flex flex-col gap-2 items-center p-4 w-16 h-full border-r rounded-l-2xl z-50" style={{ background: 'var(--alg-white)', borderColor: 'var(--border-color)' }}>
+    <aside className="flex flex-col gap-2 items-center p-4 w-16 h-full border-r rounded-l-2xl z-50" style={{ background: 'var(--alg-white)', borderColor: 'var(--border-color)', color: 'var(--alg-text)' }}>
       {/* Logo */}
       <div className="mb-2 size-10 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity">
         <a href="/" className="size-7 flex items-center justify-center">
@@ -430,7 +430,7 @@ function DetailSidebar({ activeSection }: { activeSection: string }) {
       className={`flex flex-col gap-4 items-start p-4 rounded-r-2xl transition-all duration-500 h-full border-r ${
         isCollapsed ? "w-16 min-w-16 !px-0 justify-center" : "w-64"
       }`}
-      style={{ transitionTimingFunction: softSpringEasing, background: 'var(--alg-white)', borderColor: 'var(--border-color)' }}
+      style={{ transitionTimingFunction: softSpringEasing, background: 'var(--alg-white)', borderColor: 'var(--border-color)', color: 'var(--alg-text)' }}
     >
       {!isCollapsed && <BrandBadge />}
 

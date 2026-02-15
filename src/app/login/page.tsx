@@ -12,7 +12,7 @@ export default function LoginPage() {
       <header className="relative z-20 p-6">
         <Link href="/" className="flex items-center gap-2 w-fit">
           <Image
-            src="/assets/logos/logo1.png"
+            src="/assets/logos/logo2.png"
             alt="AlgoLogic"
             width={32}
             height={32}

@@ -58,11 +58,24 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
 body {
   background: var(--bg-primary);
   color: var(--text-primary);
   font-family: 'Source Sans 3', 'Source Sans Pro', sans-serif;
   min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Utility: use on light-background containers so content stays readable */
+.bg-alg-white,
+.bg-alg-bg-light {
+  color: var(--alg-text);
 }
 
 ::selection {
