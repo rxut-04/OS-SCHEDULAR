@@ -107,6 +107,50 @@ export default function CpuSchedulingPage() {
               <p><strong>Priority Scheduling:</strong> Each process has a priority; higher-priority processes run first. Can be preemptive or non-preemptive. May cause starvation for low-priority processes.</p>
             </TheorySection>
           </div>
+          {/* ── Algorithm Explainer Video ───────────────────────── */}
+          <div className="mb-8 sm:mb-12 rounded-2xl overflow-hidden border" style={{ borderColor: "var(--border-color)", background: "var(--alg-white)" }}>
+            {/* Header row */}
+            <div className="flex items-center gap-3 px-5 py-4 border-b" style={{ borderColor: "var(--border-color)", background: "var(--alg-mint)" }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: "var(--alg-primary)" }}>
+                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </div>
+              <div>
+                <p className="font-black text-sm sm:text-base leading-tight" style={{ color: "var(--alg-primary)" }}>
+                  Algorithm Explainer Video
+                </p>
+                <p className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>
+                  Watch how CPU Scheduling algorithms work — then try the interactive visualiser below
+                </p>
+              </div>
+            </div>
+
+            {/* Video player */}
+            <div className="relative w-full bg-black" style={{ aspectRatio: "16/9" }}>
+              <video
+                className="w-full h-full"
+                controls
+                preload="metadata"
+                poster=""
+                style={{ display: "block" }}
+              >
+                <source src="/VIDEOS/CPU SCHEDULING ALGORITHMS.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            </div>
+
+            {/* Footer note */}
+            <div className="px-5 py-3 flex items-center gap-2" style={{ background: "var(--alg-bg)" }}>
+              <svg className="w-4 h-4 shrink-0" style={{ color: "var(--alg-secondary)" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                Covers FCFS · SJF · Round Robin · Priority Scheduling with step-by-step Gantt chart walkthroughs.
+              </p>
+            </div>
+          </div>
+
           <div className="mb-8 sm:mb-12">
             <h2 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-3" style={{ color: "var(--alg-text)" }}>
               CPU Scheduling Algorithms
