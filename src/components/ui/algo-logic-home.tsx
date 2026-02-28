@@ -34,6 +34,64 @@ const ALGOLOGIC_STYLE = {
   headerBar: "var(--alg-header-bar)",
 };
 
+interface NavQuizResult {
+  score: number;
+  correct: number;
+  total: number;
+  passed: boolean;
+}
+
+function loadNavResult(subject: string): NavQuizResult | null {
+  try {
+    const stored = JSON.parse(localStorage.getItem(`algologic_quiz_${subject}`) || '[]') as NavQuizResult[];
+    if (stored.length === 0) return null;
+    return [...stored].sort((a, b) => b.score - a.score)[0];
+  } catch (_) { return null; }
+}
+
+function ScorePill({ label, href, result }: { label: string; href: string; result: NavQuizResult | null }) {
+  return (
+    <Link href={href} className="hidden sm:flex flex-col items-start px-3 py-1.5 rounded-xl border no-underline transition-all hover:shadow-md hover:-translate-y-0.5 min-w-[88px]"
+      style={{ background: 'var(--alg-mint)', borderColor: 'var(--border-color)' }}>
+      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--alg-primary)' }}>{label}</span>
+      {result ? (
+        <>
+          <div className="w-full h-1 rounded-full mt-1 overflow-hidden" style={{ background: 'var(--border-color)' }}>
+            <div className="h-full rounded-full" style={{ width: `${result.score}%`, background: result.passed ? 'var(--alg-primary)' : '#f97316' }} />
+          </div>
+          <span className="text-[10px] mt-0.5 font-semibold" style={{ color: result.passed ? 'var(--alg-primary)' : '#f97316' }}>
+            {result.score}% · {result.correct}/{result.total}
+          </span>
+        </>
+      ) : (
+        <span className="text-[10px] mt-0.5 text-neutral-400">Start →</span>
+      )}
+    </Link>
+  );
+}
+
+function QuizProgressPill() {
+  const [osResult, setOsResult] = useState<NavQuizResult | null>(null);
+  const [aiResult, setAiResult] = useState<NavQuizResult | null>(null);
+
+  useEffect(() => {
+    const load = () => {
+      setOsResult(loadNavResult('os'));
+      setAiResult(loadNavResult('aiml'));
+    };
+    load();
+    window.addEventListener('storage', load);
+    return () => window.removeEventListener('storage', load);
+  }, []);
+
+  return (
+    <div className="hidden sm:flex items-center gap-2">
+      <ScorePill label="OS Quiz" href="/quiz/os" result={osResult} />
+      <ScorePill label="AI/ML Quiz" href="/quiz/aiml" result={aiResult} />
+    </div>
+  );
+}
+
 function TopNav() {
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [referenceOpen, setReferenceOpen] = useState(false);
@@ -77,37 +135,9 @@ function TopNav() {
             <Code2 className="h-6 w-6" />
             AlgoLogic
           </Link>
-          <ul className="hidden sm:flex gap-5 list-none">
-            <li>
-              <button
-                onClick={() => toggle(setTutorialOpen, tutorialOpen)}
-                className="flex items-center gap-1 text-[17px] font-semibold cursor-pointer border-0 bg-transparent"
-                style={{ color: ALGOLOGIC_STYLE.text }}
-              >
-                Tutorials <ChevronDown className="h-4 w-4" />
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => toggle(setReferenceOpen, referenceOpen)}
-                className="flex items-center gap-1 text-[17px] font-semibold cursor-pointer border-0 bg-transparent"
-                style={{ color: ALGOLOGIC_STYLE.text }}
-              >
-                References <ChevronDown className="h-4 w-4" />
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => toggle(setExercisesOpen, exercisesOpen)}
-                className="flex items-center gap-1 text-[17px] font-semibold cursor-pointer border-0 bg-transparent"
-                style={{ color: ALGOLOGIC_STYLE.text }}
-              >
-                Exercises <ChevronDown className="h-4 w-4" />
-              </button>
-            </li>
-          </ul>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <QuizProgressPill />
           <Link
             href="/login"
             className="py-2 px-6 rounded-full font-bold text-white no-underline"
@@ -178,8 +208,8 @@ function TopNav() {
                 <ul className="list-none">
                   <li className="mb-3 text-[15px]">
                     <span className="font-bold text-white">1.</span>{" "}
-                    <Link href="/modules" className="text-[#bbb] no-underline ml-1 hover:text-[var(--alg-secondary)] hover:underline">
-                      AI / ML Modules
+                    <Link href="/theory/aiml" className="text-[#bbb] no-underline ml-1 hover:text-[var(--alg-secondary)] hover:underline">
+                      AI / ML Course
                     </Link>
                   </li>
                   <li className="mb-3 text-[15px]">
@@ -390,6 +420,67 @@ function BottomNav() {
   );
 }
 
+/* ─────────────────────────────────────────────────────────────
+   SPARKLINE — pure SVG, no library needed
+───────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────
+   HERO FEATURE CARDS  — wide horizontal layout
+───────────────────────────────────────────────────────────── */
+const HERO_CARDS = [
+  { id: "learning",   label: "Learning",   icon: BookOpen, accent: "#10B981", sub: "Structured theory for OS & AI/ML" },
+  { id: "animations", label: "Animations", icon: Cpu,      accent: "#60A5FA", sub: "Live step-by-step visualisers"     },
+  { id: "quiz",       label: "Quiz",       icon: Dumbbell, accent: "#FBBF24", sub: "MCQs with instant explanations"    },
+];
+
+function HeroFeatureCards() {
+  const [hovered, setHovered] = useState<string | null>(null);
+  return (
+    <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12 px-4 max-w-4xl mx-auto w-full">
+      {HERO_CARDS.map((card) => {
+        const Icon = card.icon;
+        const isHov = hovered === card.id;
+        return (
+          <div
+            key={card.id}
+            onMouseEnter={() => setHovered(card.id)}
+            onMouseLeave={() => setHovered(null)}
+            className="flex-1 flex flex-row items-center gap-4 px-6 py-5 rounded-2xl cursor-default select-none"
+            style={{
+              background: isHov
+                ? "rgba(255,255,255,0.18)"
+                : "rgba(255,255,255,0.10)",
+              border: `1.5px solid ${isHov ? "rgba(255,255,255,0.40)" : "rgba(255,255,255,0.20)"}`,
+              backdropFilter: "blur(14px)",
+              boxShadow: isHov ? `0 12px 40px rgba(0,0,0,0.22), 0 0 0 1px ${card.accent}35` : "0 4px 16px rgba(0,0,0,0.14)",
+              transform: isHov ? "translateY(-5px)" : "translateY(0)",
+              transition: "all 0.28s ease",
+              color: "#fff",
+            }}
+          >
+            {/* Icon */}
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+              style={{
+                background: `${card.accent}22`,
+                border: `1.5px solid ${card.accent}50`,
+                transform: isHov ? "scale(1.08)" : "scale(1)",
+                transition: "transform 0.28s ease",
+              }}
+            >
+              <Icon className="h-6 w-6" style={{ color: card.accent }} />
+            </div>
+            {/* Text */}
+            <div className="text-left min-w-0">
+              <p className="font-black text-base leading-tight">{card.label}</p>
+              <p className="text-xs opacity-60 mt-0.5 leading-snug">{card.sub}</p>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function HeroSection() {
   return (
     <section
@@ -398,39 +489,8 @@ function HeroSection() {
     >
       <h1 className="text-5xl md:text-[65px] font-black mb-2">MASTERING OS &amp; AI</h1>
       <p className="text-xl md:text-[22px] font-bold mb-6">Learning hard concepts made easier</p>
-      <div className="flex justify-center mb-10">
-        <Image
-          src="/assets/logos/logo2.png"
-          alt="AlgoLogic"
-          width={120}
-          height={120}
-          priority
-          className="rounded-xl object-contain"
-        />
-      </div>
-      <div className="flex flex-wrap justify-center gap-5 mb-12">
-        <Link
-          href="/theory/os"
-          className="py-2.5 px-9 rounded-full no-underline font-bold text-lg transition-all hover:scale-105"
-          style={{ background: ALGOLOGIC_STYLE.white, color: ALGOLOGIC_STYLE.text }}
-        >
-          Learning
-        </Link>
-        <Link
-          href="/modules"
-          className="py-2.5 px-9 rounded-full no-underline font-bold text-lg transition-all hover:scale-105"
-          style={{ background: ALGOLOGIC_STYLE.white, color: ALGOLOGIC_STYLE.text }}
-        >
-          Animations
-        </Link>
-        <Link
-          href="/dashboard/quiz"
-          className="py-2.5 px-9 rounded-full no-underline font-bold text-lg transition-all hover:scale-105"
-          style={{ background: ALGOLOGIC_STYLE.white, color: ALGOLOGIC_STYLE.text }}
-        >
-          Quiz
-        </Link>
-      </div>
+      {/* Feature cards — next-level design */}
+      <HeroFeatureCards />
       <div className="absolute bottom-0 left-0 w-full leading-none overflow-hidden">
         <svg
           className="relative block w-[calc(100%+1.3px)] h-[100px]"
@@ -477,7 +537,7 @@ function OSCardSection() {
             Animations
           </Link>
           <Link
-            href="/dashboard/quiz"
+            href="/quiz/os"
             className="w-[280px] py-3.5 rounded-full no-underline font-bold text-xl text-center transition-all hover:-translate-y-1 hover:shadow-lg"
             style={{ background: ALGOLOGIC_STYLE.pink, color: ALGOLOGIC_STYLE.text }}
           >
@@ -583,7 +643,7 @@ function AICardSection() {
         </p>
         <div className="flex flex-col gap-4 items-end">
           <Link
-            href="/modules"
+            href="/theory/aiml"
             className="w-[280px] py-3.5 rounded-full no-underline font-bold text-xl text-center transition-all hover:-translate-y-1 hover:shadow-lg"
             style={{ background: ALGOLOGIC_STYLE.secondary, color: ALGOLOGIC_STYLE.white }}
           >
@@ -597,7 +657,7 @@ function AICardSection() {
             Animations
           </Link>
           <Link
-            href="/dashboard/quiz"
+            href="/quiz/aiml"
             className="w-[280px] py-3.5 rounded-full no-underline font-bold text-xl text-center transition-all hover:-translate-y-1 hover:shadow-lg"
             style={{ background: ALGOLOGIC_STYLE.pink, color: ALGOLOGIC_STYLE.text }}
           >

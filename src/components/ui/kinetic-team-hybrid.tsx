@@ -202,7 +202,11 @@ export default function KineticModulesList() {
         >
           <div>
             <h1 className="text-4xl font-light tracking-tighter sm:text-6xl md:text-8xl" style={{ color: "var(--alg-text)" }}>
-              Learning <span style={{ color: "var(--alg-primary)" }}>Modules</span>
+              {activeTab === 'os' ? (
+                <>OS <span style={{ color: "var(--alg-primary)" }}>Modules</span></>
+              ) : (
+                <>AI/ML <span style={{ color: "var(--alg-primary)" }}>Modules</span></>
+              )}
             </h1>
           </div>
           <div className="h-px flex-1 mx-8 hidden md:block" style={{ background: "var(--border-color)" }} />
@@ -211,63 +215,37 @@ export default function KineticModulesList() {
           </p>
         </motion.header>
 
-        {/* Tab Switcher */}
+        {/* Page label — shows which section is active */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="mb-12 flex items-center gap-4"
+          className="mb-12 flex items-center gap-3"
         >
-          <button
-            onClick={() => setActiveTab('os')}
-            className={`group relative flex items-center gap-3 px-6 py-4 rounded-2xl border transition-all duration-500 ${
-              activeTab === 'os'
-                ? 'bg-blue-500/10 border-blue-500/30 text-[var(--alg-text)]'
-                : 'bg-black/5 border-black/10 text-neutral-600 hover:bg-black/10 hover:text-[var(--alg-text)]'
-            }`}
-          >
-            <div className={`p-2 rounded-xl transition-colors ${activeTab === 'os' ? 'bg-blue-500/20' : 'bg-black/5 group-hover:bg-black/10'}`}>
-              <Cpu size={24} className={activeTab === 'os' ? 'text-blue-600' : 'text-neutral-500'} />
-            </div>
-            <div className="text-left">
-              <div className="font-semibold text-sm">Operating Systems</div>
-              <div className="text-xs text-neutral-500">CPU, Memory, Process</div>
-            </div>
-            {activeTab === 'os' && (
-              <motion.div
-                layoutId="activeTab"
-                className="absolute inset-0 border-2 border-blue-500/50 rounded-2xl"
-                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-              />
-            )}
-          </button>
-
-          <button
-            onClick={() => setActiveTab('aiml')}
-            className={`group relative flex items-center gap-3 px-6 py-4 rounded-2xl border transition-all duration-500 ${
-              activeTab === 'aiml'
-                ? 'bg-purple-500/10 border-purple-500/30 text-[var(--alg-text)]'
-                : 'bg-black/5 border-black/10 text-neutral-600 hover:bg-black/10 hover:text-[var(--alg-text)]'
-            }`}
-          >
-            <div className={`p-2 rounded-xl transition-colors ${activeTab === 'aiml' ? 'bg-purple-500/20' : 'bg-black/5 group-hover:bg-black/10'}`}>
-              <Brain size={24} className={activeTab === 'aiml' ? 'text-purple-600' : 'text-neutral-500'} />
-            </div>
-            <div className="text-left">
-              <div className="font-semibold text-sm flex items-center gap-2">
-                AI/ML Visualizer
-                <span className="px-2 py-0.5 text-[10px] font-bold bg-purple-500/20 text-purple-600 rounded-full border border-purple-500/30 animate-pulse">NEW</span>
+          {activeTab === 'os' ? (
+            <div className="flex items-center gap-3 px-5 py-3 rounded-2xl border bg-blue-500/10 border-blue-500/30 text-[var(--alg-text)]">
+              <div className="p-2 rounded-xl bg-blue-500/20">
+                <Cpu size={22} className="text-blue-600" />
               </div>
-              <div className="text-xs text-neutral-500">Neural Networks, Clustering</div>
+              <div className="text-left">
+                <div className="font-semibold text-sm">Operating Systems</div>
+                <div className="text-xs text-neutral-500">CPU, Memory, Process</div>
+              </div>
             </div>
-            {activeTab === 'aiml' && (
-              <motion.div
-                layoutId="activeTab"
-                className="absolute inset-0 border-2 border-purple-500/50 rounded-2xl"
-                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-              />
-            )}
-          </button>
+          ) : (
+            <div className="flex items-center gap-3 px-5 py-3 rounded-2xl border bg-purple-500/10 border-purple-500/30 text-[var(--alg-text)]">
+              <div className="p-2 rounded-xl bg-purple-500/20">
+                <Brain size={22} className="text-purple-600" />
+              </div>
+              <div className="text-left">
+                <div className="font-semibold text-sm flex items-center gap-2">
+                  AI/ML Visualizer
+                  <span className="px-2 py-0.5 text-[10px] font-bold bg-purple-500/20 text-purple-600 rounded-full border border-purple-500/30 animate-pulse">NEW</span>
+                </div>
+                <div className="text-xs text-neutral-500">Neural Networks, Clustering</div>
+              </div>
+            </div>
+          )}
         </motion.div>
 
         {/* The List */}
