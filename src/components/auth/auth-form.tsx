@@ -2,9 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Loader2 } from 'lucide-react'
+
+/** Local sign-in only (no database). Only this account is allowed. */
+const ALLOWED_EMAIL = 'antaravraut@gmail.com'
+const ALLOWED_PASSWORD = '123456'
+export const LOCAL_SIGNIN_KEY = 'algologic_local_signin'
 
 interface AuthFormProps {
   view: 'login' | 'signup'
@@ -22,35 +26,24 @@ export function AuthForm({ view }: AuthFormProps) {
     setError(null)
     setLoading(true)
 
-    const supabase = createClient()
-    if (!supabase) {
-      setError('Supabase is not configured. Please try again later.')
+    const emailTrimmed = email.trim().toLowerCase()
+    if (emailTrimmed !== ALLOWED_EMAIL || password !== ALLOWED_PASSWORD) {
+      setError(
+        view === 'login'
+          ? 'Invalid credentials. Only the designated account can sign in.'
+          : 'Registration is restricted. Only the designated account may sign up.'
+      )
       setLoading(false)
       return
     }
 
-    try {
-      if (view === 'signup') {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-        })
-        if (error) throw error
-        router.push('/login?message=Check email to continue sign in process')
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
-        if (error) throw error
-        router.push('/dashboard')
-        router.refresh()
-      }
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
+    // Local sign-in only (no database)
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(LOCAL_SIGNIN_KEY, emailTrimmed)
     }
+    router.push('/dashboard')
+    router.refresh()
+    setLoading(false)
   }
 
   return (

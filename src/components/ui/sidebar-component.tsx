@@ -40,7 +40,7 @@ import {
   Education,
   Logout,
 } from "@carbon/icons-react";
-import { createClient } from "@/lib/supabase/client";
+import { LOCAL_SIGNIN_KEY } from "@/components/auth/auth-form";
 
 /** ======================= Local SVG paths (inline) ======================= */
 // Kept original paths for the logo/brand components
@@ -459,10 +459,10 @@ function DetailSidebar({ activeSection }: { activeSection: string }) {
         {isCollapsed ? (
           <button
             type="button"
-            onClick={async () => {
-              const supabase = createClient();
-              if (supabase) await supabase.auth.signOut();
+            onClick={() => {
+              if (typeof window !== "undefined") window.localStorage.removeItem(LOCAL_SIGNIN_KEY);
               router.push("/");
+              router.refresh();
             }}
             className="w-full flex items-center justify-center size-10 rounded-lg transition-colors hover:bg-[var(--alg-mint)]"
             style={{ color: 'var(--alg-text)' }}
@@ -490,10 +490,10 @@ function DetailSidebar({ activeSection }: { activeSection: string }) {
             </div>
             <button
               type="button"
-              onClick={async () => {
-                const supabase = createClient();
-                if (supabase) await supabase.auth.signOut();
+              onClick={() => {
+                if (typeof window !== "undefined") window.localStorage.removeItem(LOCAL_SIGNIN_KEY);
                 router.push("/");
+                router.refresh();
               }}
               className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-[14px] transition-colors hover:bg-[var(--alg-mint)]"
               style={{ color: 'var(--alg-text)' }}

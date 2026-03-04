@@ -1,6 +1,7 @@
 "use client"
 
 import { TwoLevelSidebar } from '@/components/ui/sidebar-component'
+import { LocalAuthGuard } from '@/components/auth/local-auth-guard'
 
 export default function DashboardLayout({
   children,
@@ -8,6 +9,7 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
+    <LocalAuthGuard>
     <div
       className="flex h-screen w-full overflow-hidden"
       style={{ background: 'var(--alg-bg)', color: 'var(--alg-text)' }}
@@ -22,5 +24,6 @@ export default function DashboardLayout({
         </main>
       </div>
     </div>
+    </LocalAuthGuard>
   )
 }
