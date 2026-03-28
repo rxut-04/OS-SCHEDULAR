@@ -680,6 +680,43 @@ export default function ContiguousMemoryVisualizer() {
           </div>
         </motion.div>
 
+        {/* Video Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-6"
+        >
+          <div className="max-w-4xl mx-auto">
+            <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-black/40 backdrop-blur-xl">
+              <video
+                controls
+                className="w-full aspect-video"
+                poster="/assets/posters/contiguous-memory-poster.jpg"
+              >
+                <source src="/VIDEOS/CONTIGIOUS.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+              <div className="absolute bottom-4 left-4 right-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-xl border border-white/10">
+                    <Play size={14} className="text-blue-400" />
+                    <span className="text-xs text-white font-medium">Watch First: Contiguous Memory Allocation</span>
+                  </div>
+                  <div className="text-xs text-neutral-400 bg-black/60 backdrop-blur-xl px-2 py-1 rounded">
+                    8:45
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="mt-3 text-center">
+              <p className="text-sm text-neutral-400">
+                Learn about fixed vs dynamic partitioning, allocation strategies, and fragmentation before experimenting below
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
         <div className="flex flex-col lg:flex-row gap-4">
           <motion.div
             ref={containerRef}

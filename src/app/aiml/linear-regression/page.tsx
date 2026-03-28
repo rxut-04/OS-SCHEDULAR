@@ -478,6 +478,59 @@ export default function LinearRegressionVisualizer() {
           </div>
         </motion.div>
 
+        {/* ── Algorithm Explainer Video ───────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-6"
+        >
+          <div className="max-w-4xl mx-auto">
+            <div className="mb-8 sm:mb-12 rounded-2xl overflow-hidden border border-white/10 bg-black/40 backdrop-blur-xl">
+              {/* Header row */}
+              <div className="flex items-center gap-3 px-5 py-4 border-b border-white/10 bg-white/5">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-cyan-600">
+                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-black text-sm sm:text-base leading-tight text-cyan-400">
+                    Algorithm Explainer Video
+                  </p>
+                  <p className="text-xs mt-0.5 text-neutral-400">
+                    Watch how Linear Regression works — then try the interactive visualiser below
+                  </p>
+                </div>
+              </div>
+
+              {/* Video player */}
+              <div className="relative w-full bg-black" style={{ aspectRatio: "16/9" }}>
+                <video
+                  className="w-full h-full"
+                  controls
+                  preload="metadata"
+                  poster=""
+                  style={{ display: "block" }}
+                >
+                  <source src="/VIDEOS/LINEAR_REGRESSION.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+
+              {/* Footer note */}
+              <div className="px-5 py-3 flex items-center justify-between border-t border-white/10">
+                <p className="text-xs text-neutral-400">
+                  Covers Line Fitting · Gradient Descent · Loss Minimization · Predictions
+                </p>
+                <div className="text-xs text-neutral-500 bg-white/5 px-2 py-1 rounded">
+                  ~9 min
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
         <div className="flex flex-col lg:flex-row gap-6">
           <motion.div 
             ref={containerRef}
