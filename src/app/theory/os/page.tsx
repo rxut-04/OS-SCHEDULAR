@@ -613,6 +613,103 @@ Physical address: [  frame number f  |  offset d  ]`}</Code>
         </>),
       },
       {
+        title: "Page Tables — Structure & Management",
+        content: (<>
+          <P1>The <strong>page table</strong> is a critical OS data structure that maps virtual page numbers to physical frame numbers. It is the core data structure enabling virtual memory, and its efficiency profoundly affects overall system performance.</P1>
+          <SectionTitle>Page Table Entry (PTE) Format</SectionTitle>
+          <P1>Each entry in the page table is typically 4–8 bytes and contains multiple fields:</P1>
+          <Code>{`Typical 64-bit PTE format (modern x86-64 / ARM64):
+┌─────┬──────────────────────┬──────────────────┬─────────────┐
+│  X  │ Physical Frame Number │  Flags/Attributes│  Unused (0) │
+│ (12)│      (40 bits)        │    (12 bits)     │   (12)      │
+└─────┴──────────────────────┴──────────────────┴─────────────┘
+
+Critical Bits:
+  P (Present/Valid)     - 1 = page is in RAM; 0 = on disk (page fault on access)
+  R/W (Read/Write)      - 1 = writable; 0 = read-only
+  U/S (User/Supervisor) - 1 = user mode can access; 0 = kernel only
+  Accessed (A)          - Set by CPU automatically on any access; helps LRU
+  Dirty (D)             - Set by CPU on write; tells OS which pages need writeback
+  Caching (C/B)         - Cache enable/write-through/write-back (device memory)
+  Execute (X)           - NX bit: 1 = executable code; 0 = data only (security)`}</Code>
+          <InfoBox title="Address Translation with Attributes">
+            When CPU requests address translation, it also checks R/W and U/S bits. Violation → page fault (with fault code). Example: user process writes to read-only page → SIGSEGV.
+          </InfoBox>
+          <SectionTitle>Single-Level Page Table (Flat)</SectionTitle>
+          <P1>Simplest design: one array indexed by virtual page number. For 32-bit systems with 4 KB pages:</P1>
+          <Code>{`Virtual address space: 2³² bytes = 2²⁰ pages (1M pages)
+Page table size: 2²⁰ × 8 bytes = 8 MB per process
+
+For 64-bit systems: 2⁶⁴ / 4KB = 2⁵² pages
+Page table size: 2⁵² × 8 bytes = 32 petabytes per process ← IMPOSSIBLE!`}</Code>
+          <WarnBox title="Why Single-Level Fails for 64-Bit">
+            With 64-bit address spaces, a flat page table is astronomically large. Even if only sparse regions of memory are used, the page table itself must cover the entire address space. Solution: hierarchical page tables.
+          </WarnBox>
+          <SectionTitle>Hierarchical (Multi-Level) Page Tables</SectionTitle>
+          <P1>Divide page table into levels. Only the branch needed for the current process's address space is allocated in memory. The rest is implicitly absent (saved memory).</P1>
+          <Code>{`Two-Level Example (32-bit, 4KB pages):
+Virtual Address (32-bit):
+  [   PD Index   |  PT Index  |  Page Offset  ]
+  [    10 bits   |  10 bits   |  12 bits (4KB)]
+                    ↓              ↓
+            Page Directory    Page Table
+
+Translation:
+  1. Extract PD index (bits 22–31) → access Page Directory in PTBR
+  2. Page Directory entry gives base of Page Table
+  3. Extract PT index (bits 12–21) → index into Page Table
+  4. Page Table entry gives physical frame number
+  5. Concatenate with offset (bits 0–11) → physical address
+
+Memory usage: Only allocate Page Table for entries with allocated pages.
+Example: 1 MB program → ~256 PTEs needed; skip ~1M unused PTEs
+Physical memory for page tables: ~1 KB instead of 4 MB!`}</Code>
+          <SectionTitle>Three-Level & Four-Level Hierarchies</SectionTitle>
+          <P1>Modern 64-bit CPUs use 3–4 levels for balance between directory size and translation depth.</P1>
+          <Table headers={["Levels", "Address Bits", "Per-Process PT Memory", "Translation Accesses", "OS Example"]} rows={[
+            ["2 (32-bit)", "10+10+12", "~4 MB (sparse: much less)", "2 PT + 1 data", "x86 (32-bit) / ARM (32-bit)"],
+            ["3 (39-bit VA)", "9+9+9+12", "Sparse: few MB", "3 PT + 1 data", "ARM64 with 512 GB max VA"],
+            ["4 (48-bit VA)", "9+9+9+9+12", "Sparse: few MB", "4 PT + 1 data", "x86-64 (Intel/AMD)"],
+            ["5 (57-bit VA)", "9+9+9+9+9+12", "Sparse: few MB", "5 PT + 1 data", "ARM64 with 128 TB max VA"],
+          ]} />
+          <SectionTitle>Page Table Entry Caching: TLB Management</SectionTitle>
+          <P1>The <strong>Translation Lookaside Buffer (TLB)</strong> is a small fully-associative hardware cache that caches recent ⟨VPN → PFN⟩ translations. It must be invalidated when page tables change.</P1>
+          <Code>{`TLB Miss Scenarios:
+  1. Soft miss: Entry not in TLB, but valid in page table → OS/CPU refill TLB
+  2. Hard miss: Entry not valid in page table → page fault (read from disk)
+
+TLB Invalidation:
+  - context_switch: Flush entire TLB (expensive!) or use ASID (address space ID) tags
+  - munmap(): Selectively invalidate entries for freed region (shootdown)
+  - mprotect(): Invalidate permissions on changed pages (TLB flush needed)
+  - madvise(): May prefault pages to warm TLB`}</Code>
+          <SectionTitle>Software vs Hardware Page Tables</SectionTitle>
+          <Table headers={["Aspect", "Hardware-Managed", "Software-Managed"]} rows={[
+            ["Translation", "CPU's MMU walks page table automatically", "OS handles page faults in software"],
+            ["Performance", "Fast (automatic walking), but inflexible", "Slower (exception on miss), but flexible"],
+            ["Consistency", "HW updates PTE access/dirty bits atomically", "OS must manually update flags carefully"],
+            ["Complexity", "Simpler code; complex CPU", "Complex OS page fault handler; simpler CPU"],
+            ["Examples", "x86, ARM, MIPS (page walking)", "Alpha, SPARC (software exception handlers)"],
+          ]} />
+          <SectionTitle>Page Table Synchronisation Issues</SectionTitle>
+          <UL items={[
+            "<strong>TLB coherency:</strong> When OS modifies a PTE (e.g., after disk I/O completes), the TLB might hold stale data. Requires TLB invalidation (IPI on multicore).",
+            "<strong>Page table swapping:</strong> What if the page table itself is swapped out? Most modern OSes keep page tables resident (pinned in RAM). Some support page table paging with complexity.",
+            "<strong>Copy-on-Write optimization:</strong> Shared pages marked read-only. First write triggers page fault → OS creates private copy and updates PTE.",
+          ]} />
+          <SectionTitle>Memory Overhead & Page Table Size</SectionTitle>
+          <Table headers={["Scenario", "Virtual Space", "Page Table Memory (Sparse)", "PTEs per Process"]} rows={[
+            ["Typical 32-bit process", "4 GB", "~4–8 MB", "~1M PTEs, ~256 allocated"],
+            ["Large 64-bit process (100 GB used)", "48-bit VA (256 TB)", "~100 MB", "~25M PTEs, mostly allocated"],
+            ["Idle process", "Any", "~16 KB–64 KB", "Just page directory + 1–2 tables"],
+            ["Kernel", "Shared mapping", "~10–50 MB", "Depends on physical RAM size"],
+          ]} />
+          <InfoBox title="Practical Observation">
+            Even on modern 64-bit systems, most processes use only a tiny fraction of their theoretical address space. Sparse allocation via hierarchical page tables keeps memory overhead reasonable (a few MB per process, not gigabytes).
+          </InfoBox>
+        </>),
+      },
+      {
         title: "Virtual Memory & Page Replacement",
         content: (<>
           <P1><strong>Virtual memory</strong> allows processes to use more address space than physical RAM by keeping only the active portion in memory and the rest on disk (swap/page file).</P1>
